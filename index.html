@@ -123,17 +123,31 @@ let classStatus="available";
 let aksi="";
 
 if(found){
-status=found.nama;
-classStatus="booked";
+  status = "Booked - " + found.nama;
+  classStatus = "booked";
 
-if(isAdmin){
-aksi=`<button onclick="hapus('${found.id}')">Hapus</button>`;
-}else{
-aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20tanggal%20${selectedTanggal}%20jam%20${jam}" target="_blank"><button class="wa">WA</button></a>`;
-}
+  if(isAdmin){
+    aksi = `
+      <button onclick="hapus('${found.id}')">Hapus</button>
+    `;
+  }else{
+    aksi = `<button disabled>Booked</button>`;
+  }
 
 }else{
-aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20tanggal%20${selectedTanggal}%20jam%20${jam}" target="_blank"><button class="wa">Booking</button></a>`;
+
+  if(isAdmin){
+    aksi = `
+      <button onclick="quickBooking('${jam}')">Konfirmasi</button>
+    `;
+  }else{
+    aksi = `
+      <a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20tanggal%20${selectedTanggal}%20jam%20${jam}" target="_blank">
+        <button class="wa">Booking</button>
+      </a>
+    `;
+  }
+
 }
 
 let row=document.createElement("tr");

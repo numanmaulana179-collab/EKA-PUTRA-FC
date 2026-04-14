@@ -9,45 +9,144 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-body { font-family: Arial; background:#eef2f7; margin:0;}
-header {background:#1e4e79;color:white;text-align:center;padding:20px;}
-.container{padding:20px;}
-table{width:100%;border-collapse:collapse;}
-th,td{border:1px solid #ddd;padding:10px;text-align:center;}
-th{background:#1e4e79;color:white;}
-.available{background:#d4edda;}
-.booked{background:#f8d7da;}
-button{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;}
-.wa{background:#25D366;color:white;}
-.admin{background:#1e4e79;color:white;}
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin:0;
+  background: linear-gradient(135deg,#0d2b45,#1e4e79);
+  color:#333;
+}
+
+header {
+  text-align:center;
+  padding:30px;
+  color:white;
+}
+
+header img {
+  width:100px;
+  margin-bottom:10px;
+}
+
+.container {
+  max-width:1000px;
+  margin:auto;
+  background:white;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+h2 {
+  margin:0;
+}
+
+.filter-box {
+  text-align:center;
+  margin-bottom:20px;
+}
+
+input[type="date"] {
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+.admin-panel {
+  background:#f1f5f9;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
+.admin-panel input, .admin-panel select {
+  padding:8px;
+  margin:5px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button {
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.btn-admin {
+  background:#1e4e79;
+  color:white;
+}
+
+.btn-wa {
+  background:#25D366;
+  color:white;
+}
+
+.btn-delete {
+  background:#dc3545;
+  color:white;
+}
+
+.btn-confirm {
+  background:#ffc107;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+
+th {
+  background:#1e4e79;
+  color:white;
+}
+
+th, td {
+  padding:12px;
+  text-align:center;
+  border-bottom:1px solid #ddd;
+}
+
+.available {
+  color:#28a745;
+  font-weight:bold;
+}
+
+.booked {
+  color:#dc3545;
+  font-weight:bold;
+}
+
+tr:hover {
+  background:#f9f9f9;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>Eka Putra FC ⚽</h2>
-<p>Booking Lapangan</p>
+  <img src="EKA PUTRA.jpeg">
+  <h2>Eka Putra FC ⚽</h2>
+  <p>Booking Lapangan Online</p>
 </header>
 
 <div class="container">
 
-<!-- FILTER TANGGAL -->
-<h3>Pilih Tanggal</h3>
-<input type="date" id="filterTanggal">
-
-<br><br>
-
-<!-- ADMIN PANEL -->
-<div id="adminPanel" style="display:none;">
-<h3>ADMIN PANEL</h3>
-<input type="text" id="nama" placeholder="Nama Tim">
-<input type="date" id="tanggal">
-<select id="jam"></select>
-<button class="admin" onclick="booking()">Tambah Booking</button>
+<div class="filter-box">
+  <h3>Pilih Tanggal</h3>
+  <input type="date" id="filterTanggal">
 </div>
 
-<br>
+<div id="adminPanel" class="admin-panel" style="display:none;">
+  <h3>Admin Panel</h3>
+  <input type="text" id="nama" placeholder="Nama Tim">
+  <input type="date" id="tanggal">
+  <select id="jam"></select>
+  <button class="btn-admin" onclick="booking()">Tambah</button>
+</div>
 
 <table>
 <thead>
@@ -65,20 +164,17 @@ button{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;}
 
 <script>
 
-// 🔐 PASSWORD ADMIN
 const adminPassword = "12345";
 
-// 🔥 MODE ADMIN
 let isAdmin = false;
 if(window.location.search.includes("admin")){
-  let pass = prompt("Masukkan password admin");
+  let pass = prompt("Password admin:");
   if(pass === adminPassword){
     isAdmin = true;
     document.getElementById("adminPanel").style.display = "block";
   }
 }
 
-// FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
   authDomain: "ekaputrafc-68823.firebaseapp.com",
@@ -94,14 +190,15 @@ const jadwalEl = document.getElementById("jadwal");
 const jamSelect = document.getElementById("jam");
 const filterTanggal = document.getElementById("filterTanggal");
 
-// isi jam dropdown
 times.forEach(j=>{
-let o=document.createElement("option");
-o.value=j;o.textContent=j;
-jamSelect.appendChild(o);
+  let o=document.createElement("option");
+  o.value=j;o.textContent=j;
+  jamSelect.appendChild(o);
 });
 
-// realtime + filter tanggal
+// default hari ini
+filterTanggal.value = new Date().toISOString().split("T")[0];
+
 function loadData(){
 let selectedTanggal = filterTanggal.value;
 
@@ -123,36 +220,29 @@ let classStatus="available";
 let aksi="";
 
 if(found){
-  status = "Booked - " + found.nama;
-  classStatus = "booked";
+status="Booked - "+found.nama;
+classStatus="booked";
 
-  if(isAdmin){
-    aksi = `
-      <button onclick="hapus('${found.id}')">Hapus</button>
-    `;
-  }else{
-    aksi = `<button disabled>Booked</button>`;
-  }
+if(isAdmin){
+aksi=`<button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>`;
+}else{
+aksi=`<button disabled>Booked</button>`;
+}
 
 }else{
 
-  if(isAdmin){
-    aksi = `
-      <button onclick="quickBooking('${jam}')">Konfirmasi</button>
-    `;
-  }else{
-    aksi = `
-      <a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20tanggal%20${selectedTanggal}%20jam%20${jam}" target="_blank">
-        <button class="wa">Booking</button>
-      </a>
-    `;
-  }
+if(isAdmin){
+aksi=`<button class="btn-confirm" onclick="quickBooking('${jam}')">Konfirmasi</button>`;
+}else{
+aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20tanggal%20${selectedTanggal}%20jam%20${jam}" target="_blank">
+<button class="btn-wa">Booking</button></a>`;
+}
 
 }
 
 let row=document.createElement("tr");
 row.innerHTML=`
-<td>${selectedTanggal ? new Date(selectedTanggal).toLocaleDateString("id-ID") : "-"}</td>
+<td>${new Date(selectedTanggal).toLocaleDateString("id-ID")}</td>
 <td>${jam}</td>
 <td class="${classStatus}">${status}</td>
 <td>${aksi}</td>
@@ -165,24 +255,26 @@ jadwalEl.appendChild(row);
 });
 }
 
-// event pilih tanggal
 filterTanggal.addEventListener("change", loadData);
+loadData();
 
-// tambah booking
 function booking(){
 let nama=document.getElementById("nama").value;
 let tanggal=document.getElementById("tanggal").value;
 let jam=document.getElementById("jam").value;
 
-if(!tanggal){
-alert("Pilih tanggal dulu!");
-return;
+db.collection("bookings").add({nama,tanggal,jam});
 }
+
+function quickBooking(jam){
+let nama = prompt("Nama tim?");
+let tanggal = filterTanggal.value;
+
+if(!nama) return;
 
 db.collection("bookings").add({nama,tanggal,jam});
 }
 
-// hapus booking
 function hapus(id){
 db.collection("bookings").doc(id).delete();
 }

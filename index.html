@@ -1,76 +1,83 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eka Putra FC - Booking Lapangan</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eka Putra FC</title>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background:#eef2f7; margin:0; }
-    header { background: linear-gradient(135deg,#0d2b45,#1e4e79); color:white; padding:25px; text-align:center; }
-    header img { width:90px; }
-    .container { max-width:1100px; margin:auto; padding:20px; }
-    .card { background:white; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
-    input, select { padding:10px; margin:5px; border-radius:6px; border:1px solid #ccc; }
-    button { padding:10px 15px; border:none; border-radius:6px; cursor:pointer; background:#1e4e79; color:white; font-weight:bold; }
-    table { width:100%; border-collapse: collapse; }
-    th, td { padding:12px; border:1px solid #ddd; text-align:center; }
-    th { background:#1e4e79; color:white; }
-    .available { background:#d4edda; }
-    .booked { background:#f8d7da; }
-  </style>
+<style>
+body { font-family: Arial; background:#eef2f7; margin:0;}
+header {background:#1e4e79;color:white;text-align:center;padding:20px;}
+.container{padding:20px;}
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #ddd;padding:10px;text-align:center;}
+th{background:#1e4e79;color:white;}
+.available{background:#d4edda;}
+.booked{background:#f8d7da;}
+button{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;}
+.wa{background:#25D366;color:white;}
+.admin{background:#1e4e79;color:white;}
+</style>
 </head>
+
 <body>
 
 <header>
-  <img src="logo.jpeg">
-  <h1>Eka Putra FC</h1>
-  <p>Booking Lapangan Online ⚽</p>
+<h2>Eka Putra FC ⚽</h2>
+<p>Booking Lapangan</p>
 </header>
 
 <div class="container">
 
-<div class="card">
-  <h3>Booking Lapangan</h3>
-  <input type="text" id="nama" placeholder="Nama Tim">
-  <input type="date" id="tanggal">
-  <select id="jam"></select>
-  <button onclick="booking()">Booking</button>
+<!-- ADMIN PANEL -->
+<div id="adminPanel" style="display:none;">
+<h3>ADMIN PANEL</h3>
+<input type="text" id="nama" placeholder="Nama Tim">
+<input type="date" id="tanggal">
+<select id="jam"></select>
+<button class="admin" onclick="booking()">Tambah Booking</button>
 </div>
 
-<div class="card">
-  <h3>Jadwal</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Tanggal</th>
-        <th>Jam</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="jadwal"></tbody>
-  </table>
-</div>
+<br>
+
+<table>
+<thead>
+<tr>
+<th>Tanggal</th>
+<th>Jam</th>
+<th>Status</th>
+<th>Aksi</th>
+</tr>
+</thead>
+<tbody id="jadwal"></tbody>
+</table>
 
 </div>
 
 <script>
 
-// 🔥 CONFIG FIREBASE KAMU
+// 🔐 PASSWORD ADMIN
+const adminPassword = "12345";
+
+// CEK MODE ADMIN
+let isAdmin = false;
+let pass = prompt("Masukkan password admin (kosongkan jika user)");
+
+if(pass === adminPassword){
+  isAdmin = true;
+  document.getElementById("adminPanel").style.display = "block";
+}
+
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
   authDomain: "ekaputrafc-68823.firebaseapp.com",
-  projectId: "ekaputrafc-68823",
-  storageBucket: "ekaputrafc-68823.firebasestorage.app",
-  messagingSenderId: "582282824017",
-  appId: "1:582282824017:web:1b87bb5a3078068e1e6b70"
+  projectId: "ekaputrafc-68823"
 };
 
-// INIT FIREBASE
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -79,83 +86,71 @@ const times = ["07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","
 const jadwalEl = document.getElementById("jadwal");
 const jamSelect = document.getElementById("jam");
 
-// isi dropdown jam
-times.forEach(j => {
-  let opt = document.createElement("option");
-  opt.value = j;
-  opt.textContent = j;
-  jamSelect.appendChild(opt);
+// isi jam
+times.forEach(j=>{
+let o=document.createElement("option");
+o.value=j;o.textContent=j;
+jamSelect.appendChild(o);
 });
 
-// realtime data
-function loadRealtime(){
-  let tgl = document.getElementById("tanggal").value;
+// realtime
+db.collection("bookings").onSnapshot(snapshot=>{
+jadwalEl.innerHTML="";
 
-  db.collection("bookings").onSnapshot(snapshot => {
-    jadwalEl.innerHTML = "";
+times.forEach(jam=>{
+let found=null;
 
-    if(!tgl){
-      jadwalEl.innerHTML = "<tr><td colspan='3'>Pilih tanggal dulu</td></tr>";
-      return;
-    }
+snapshot.forEach(doc=>{
+let d=doc.data();
+if(d.jam===jam){
+found={...d,id:doc.id};
+}
+});
 
-    times.forEach(jam => {
-      let found = null;
+let status="Kosong";
+let classStatus="available";
+let aksi="";
 
-      snapshot.forEach(doc => {
-        let d = doc.data();
-        if(d.tanggal === tgl && d.jam === jam){
-          found = d;
-        }
-      });
+if(found){
+status=found.nama;
+classStatus="booked";
 
-      let status = "Kosong";
-      let classStatus = "available";
-
-      if(found){
-        status = found.nama;
-        classStatus = "booked";
-      }
-
-      let row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${tgl}</td>
-        <td>${jam}</td>
-        <td class="${classStatus}">${status}</td>
-      `;
-
-      jadwalEl.appendChild(row);
-    });
-  });
+if(isAdmin){
+aksi=`<button onclick="hapus('${found.id}')">Hapus</button>`;
+}else{
+aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20jam%20${jam}" target="_blank"><button class="wa">WA</button></a>`;
 }
 
-// booking
+}else{
+aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20jam%20${jam}" target="_blank"><button class="wa">Booking</button></a>`;
+}
+
+let row=document.createElement("tr");
+row.innerHTML=`
+<td>-</td>
+<td>${jam}</td>
+<td class="${classStatus}">${status}</td>
+<td>${aksi}</td>
+`;
+
+jadwalEl.appendChild(row);
+
+});
+});
+
+// tambah booking
 function booking(){
-  let nama = document.getElementById("nama").value;
-  let tanggal = document.getElementById("tanggal").value;
-  let jam = document.getElementById("jam").value;
+let nama=document.getElementById("nama").value;
+let tanggal=document.getElementById("tanggal").value;
+let jam=document.getElementById("jam").value;
 
-  if(!nama || !tanggal){
-    alert("Lengkapi data!");
-    return;
-  }
-
-  db.collection("bookings")
-    .where("tanggal","==",tanggal)
-    .where("jam","==",jam)
-    .get()
-    .then(res => {
-      if(!res.empty){
-        alert("Sudah dibooking!");
-      } else {
-        db.collection("bookings").add({ nama, tanggal, jam });
-        alert("Booking berhasil!");
-      }
-    });
+db.collection("bookings").add({nama,tanggal,jam});
 }
 
-// load saat pilih tanggal
-document.getElementById("tanggal").addEventListener("change", loadRealtime);
+// hapus
+function hapus(id){
+db.collection("bookings").doc(id).delete();
+}
 
 </script>
 

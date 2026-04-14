@@ -62,13 +62,15 @@ button{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;}
 // 🔐 PASSWORD ADMIN
 const adminPassword = "12345";
 
-// CEK MODE ADMIN
+// 🔥 MODE ADMIN VIA LINK ?admin
 let isAdmin = false;
-let pass = prompt("Masukkan password admin (kosongkan jika user)");
 
-if(pass === adminPassword){
-  isAdmin = true;
-  document.getElementById("adminPanel").style.display = "block";
+if(window.location.search.includes("admin")){
+  let pass = prompt("Masukkan password admin");
+  if(pass === adminPassword){
+    isAdmin = true;
+    document.getElementById("adminPanel").style.display = "block";
+  }
 }
 
 // FIREBASE CONFIG
@@ -86,14 +88,14 @@ const times = ["07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","
 const jadwalEl = document.getElementById("jadwal");
 const jamSelect = document.getElementById("jam");
 
-// isi jam
+// isi jam dropdown
 times.forEach(j=>{
 let o=document.createElement("option");
 o.value=j;o.textContent=j;
 jamSelect.appendChild(o);
 });
 
-// realtime
+// realtime data
 db.collection("bookings").onSnapshot(snapshot=>{
 jadwalEl.innerHTML="";
 
@@ -138,7 +140,7 @@ jadwalEl.appendChild(row);
 });
 });
 
-// tambah booking
+// tambah booking (ADMIN)
 function booking(){
 let nama=document.getElementById("nama").value;
 let tanggal=document.getElementById("tanggal").value;
@@ -147,7 +149,7 @@ let jam=document.getElementById("jam").value;
 db.collection("bookings").add({nama,tanggal,jam});
 }
 
-// hapus
+// hapus booking (ADMIN)
 function hapus(id){
 db.collection("bookings").doc(id).delete();
 }

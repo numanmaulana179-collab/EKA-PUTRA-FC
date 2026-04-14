@@ -32,6 +32,12 @@ button{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;}
 
 <div class="container">
 
+<!-- FILTER TANGGAL -->
+<h3>Pilih Tanggal</h3>
+<input type="date" id="filterTanggal">
+
+<br><br>
+
 <!-- ADMIN PANEL -->
 <div id="adminPanel" style="display:none;">
 <h3>ADMIN PANEL</h3>
@@ -62,9 +68,8 @@ button{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;}
 // 🔐 PASSWORD ADMIN
 const adminPassword = "12345";
 
-// 🔥 MODE ADMIN VIA LINK ?admin
+// 🔥 MODE ADMIN
 let isAdmin = false;
-
 if(window.location.search.includes("admin")){
   let pass = prompt("Masukkan password admin");
   if(pass === adminPassword){
@@ -73,7 +78,7 @@ if(window.location.search.includes("admin")){
   }
 }
 
-// FIREBASE CONFIG
+// FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
   authDomain: "ekaputrafc-68823.firebaseapp.com",
@@ -87,6 +92,7 @@ const times = ["07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","
 
 const jadwalEl = document.getElementById("jadwal");
 const jamSelect = document.getElementById("jam");
+const filterTanggal = document.getElementById("filterTanggal");
 
 // isi jam dropdown
 times.forEach(j=>{
@@ -95,7 +101,10 @@ o.value=j;o.textContent=j;
 jamSelect.appendChild(o);
 });
 
-// realtime data
+// realtime + filter tanggal
+function loadData(){
+let selectedTanggal = filterTanggal.value;
+
 db.collection("bookings").onSnapshot(snapshot=>{
 jadwalEl.innerHTML="";
 
@@ -104,7 +113,7 @@ let found=null;
 
 snapshot.forEach(doc=>{
 let d=doc.data();
-if(d.jam===jam){
+if(d.jam===jam && d.tanggal===selectedTanggal){
 found={...d,id:doc.id};
 }
 });
@@ -120,16 +129,16 @@ classStatus="booked";
 if(isAdmin){
 aksi=`<button onclick="hapus('${found.id}')">Hapus</button>`;
 }else{
-aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20jam%20${jam}" target="_blank"><button class="wa">WA</button></a>`;
+aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20tanggal%20${selectedTanggal}%20jam%20${jam}" target="_blank"><button class="wa">WA</button></a>`;
 }
 
 }else{
-aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20jam%20${jam}" target="_blank"><button class="wa">Booking</button></a>`;
+aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20tanggal%20${selectedTanggal}%20jam%20${jam}" target="_blank"><button class="wa">Booking</button></a>`;
 }
 
 let row=document.createElement("tr");
 row.innerHTML=`
-<td>-</td>
+<td>${selectedTanggal ? new Date(selectedTanggal).toLocaleDateString("id-ID") : "-"}</td>
 <td>${jam}</td>
 <td class="${classStatus}">${status}</td>
 <td>${aksi}</td>
@@ -138,18 +147,28 @@ row.innerHTML=`
 jadwalEl.appendChild(row);
 
 });
-});
 
-// tambah booking (ADMIN)
+});
+}
+
+// event pilih tanggal
+filterTanggal.addEventListener("change", loadData);
+
+// tambah booking
 function booking(){
 let nama=document.getElementById("nama").value;
 let tanggal=document.getElementById("tanggal").value;
 let jam=document.getElementById("jam").value;
 
+if(!tanggal){
+alert("Pilih tanggal dulu!");
+return;
+}
+
 db.collection("bookings").add({nama,tanggal,jam});
 }
 
-// hapus booking (ADMIN)
+// hapus booking
 function hapus(id){
 db.collection("bookings").doc(id).delete();
 }

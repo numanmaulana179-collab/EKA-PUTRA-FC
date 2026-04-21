@@ -137,8 +137,12 @@ tr:hover {
 <div class="container">
 
 <div class="filter-box">
-  <h3>Pilih Tanggal</h3>
-  <input type="date" id="filterTanggal">
+  <h3>Jadwal Mingguan</h3>
+
+  <button onclick="prevWeek()">⬅️</button>
+  <span id="rangeTanggal"></span>
+  <button onclick="nextWeek()">➡️</button>
+
 </div>
 
 <div id="adminPanel" class="admin-panel" style="display:none;">
@@ -164,6 +168,26 @@ tr:hover {
 </div>
 
 <script>
+  let currentDate = new Date();
+  function getWeekDates(date){
+  let start = new Date(date);
+  start.setDate(start.getDate() - start.getDay());
+
+  let days = [];
+  for(let i=0;i<7;i++){
+    let d = new Date(start);
+    d.setDate(start.getDate()+i);
+    days.push(d.toISOString().split("T")[0]);
+  }
+  return days;
+}
+
+function updateRangeText(week){
+  document.getElementById("rangeTanggal").innerText =
+    new Date(week[0]).toLocaleDateString("id-ID") +
+    " - " +
+    new Date(week[6]).toLocaleDateString("id-ID");
+}
 
 const adminPassword = "12345";
 
@@ -201,7 +225,67 @@ times.forEach(j=>{
 filterTanggal.value = new Date().toISOString().split("T")[0];
 
 function loadData(){
-let selectedTanggal = filterTanggal.value;
+
+let week = getWeekDates(currentDate);
+updateRangeText(week);
+
+db.collection("bookings").onSnapshot(snapshot=>{
+jadwalEl.innerHTML="";
+
+week.forEach(tanggal=>{
+
+  times.forEach(jam=>{
+
+    let found=null;
+
+    snapshot.forEach(doc=>{
+      let d=doc.data();
+      if(d.jam===jam && d.tanggal===tanggal){
+        found={...d,id:doc.id};
+      }
+    });
+
+    let status="Kosong";
+    let classStatus="available";
+    let aksi="";
+
+    if(found){
+      status="Booked - "+found.nama;
+      classStatus="booked";
+
+      if(isAdmin){
+        aksi=`<button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>`;
+      }else{
+        aksi=`<button disabled>Booked</button>`;
+      }
+
+    }else{
+
+      if(isAdmin){
+        aksi=`<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>`;
+      }else{
+        aksi=`<a href="https://wa.me/6281563630245?text=Booking%20Tanggal%20${tanggal}%20Jam%20${jam}%20Harga%20150K" target="_blank">
+        <button class="btn-wa">Booking</button></a>`;
+      }
+
+    }
+
+    let row=document.createElement("tr");
+    row.innerHTML=`
+      <td>${new Date(tanggal).toLocaleDateString("id-ID")}</td>
+      <td>${jam}</td>
+      <td class="${classStatus}">${status}</td>
+      <td>${aksi}</td>
+    `;
+
+    jadwalEl.appendChild(row);
+
+  });
+
+});
+
+});
+}
 
 db.collection("bookings").onSnapshot(snapshot=>{
 jadwalEl.innerHTML="";
@@ -267,19 +351,29 @@ let jam=document.getElementById("jam").value;
 db.collection("bookings").add({nama,tanggal,jam});
 }
 
-function quickBooking(jam){
-let nama = prompt("Nama tim?");
-let tanggal = filterTanggal.value;
+function quickBooking(jam, tanggal){
+  let nama = prompt("Nama tim?");
+  if(!nama) return;
 
-if(!nama) return;
-
-db.collection("bookings").add({nama,tanggal,jam});
+  db.collection("bookings").add({
+    nama,
+    tanggal,
+    jam
+  });
 }
 
 function hapus(id){
 db.collection("bookings").doc(id).delete();
 }
+function nextWeek(){
+  currentDate.setDate(currentDate.getDate()+7);
+  loadData();
+}
 
+function prevWeek(){
+  currentDate.setDate(currentDate.getDate()-7);
+  loadData();
+}
 </script>
 
 </body>

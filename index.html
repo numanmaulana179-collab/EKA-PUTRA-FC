@@ -61,6 +61,8 @@ button {
 }
 
 .btn-wa { background:#25D366; color:white; }
+.btn-delete { background:#dc3545; color:white; }
+.btn-confirm { background:#ffc107; }
 
 table {
   border-collapse:collapse;
@@ -86,6 +88,12 @@ th, td {
   background:#ffe6e6;
   color:#dc3545;
   font-weight:bold;
+}
+
+small {
+  display:block;
+  font-size:11px;
+  color:#555;
 }
 
 .table-wrapper {
@@ -168,7 +176,6 @@ function getDays(startDate){
     d.setDate(base.getDate() + i);
     days.push(d.toISOString().split("T")[0]);
   }
-
   return days;
 }
 
@@ -198,35 +205,39 @@ times.forEach(jam=>{
     snapshot.forEach(doc=>{
       let d=doc.data();
       if(d.jam===jam && d.tanggal===tanggal){
-        found=d;
+        found = {...d, id: doc.id}; // ✅ FIX PENTING
       }
     });
 
-if(found){
+    if(found){
 
-  if(isAdmin){
-    html += `<td class="booked">
-      Booked<br>
-      <button onclick="hapus('${found.id}')">Hapus</button>
-    </td>`;
-  }else{
-    html += `<td class="booked">Booked</td>`;
-  }
+      if(isAdmin){
+        html += `<td class="booked">
+          Booked
+          <small>${found.nama}</small>
+          <button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>
+        </td>`;
+      }else{
+        html += `<td class="booked">
+          Booked
+          <small>${found.nama}</small>
+        </td>`;
+      }
 
-}else{
+    }else{
 
-  if(isAdmin){
-    html += `<td class="available">
-      <button onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>
-    </td>`;
-  }else{
-    html += `<td class="available">
-      <a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}%0AHarga:%20Rp150.000" target="_blank">
-      <button class="btn-wa">Booking</button></a>
-    </td>`;
-  }
+      if(isAdmin){
+        html += `<td class="available">
+          <button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>
+        </td>`;
+      }else{
+        html += `<td class="available">
+          <a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}%0AHarga:%20Rp150.000" target="_blank">
+          <button class="btn-wa">Booking</button></a>
+        </td>`;
+      }
 
-}
+    }
 
   });
 
@@ -251,15 +262,12 @@ let tanggal = filterTanggal.value;
 
 db.collection("bookings").add({nama,tanggal,jam});
 }
-  function quickBooking(jam, tanggal){
+
+function quickBooking(jam, tanggal){
   let nama = prompt("Nama tim?");
   if(!nama) return;
 
-  db.collection("bookings").add({
-    nama,
-    tanggal,
-    jam
-  });
+  db.collection("bookings").add({nama,tanggal,jam});
 }
 
 function hapus(id){

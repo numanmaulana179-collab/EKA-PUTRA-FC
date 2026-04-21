@@ -26,7 +26,7 @@ header img {
 }
 
 .container {
-  max-width:1000px;
+  max-width:1100px;
   margin:auto;
   background:white;
   padding:20px;
@@ -39,6 +39,12 @@ header img {
   margin-bottom:20px;
 }
 
+.filter-box input {
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
 .admin-panel {
   background:#f1f5f9;
   padding:15px;
@@ -47,7 +53,7 @@ header img {
 }
 
 button {
-  padding:8px 14px;
+  padding:6px 10px;
   border:none;
   border-radius:6px;
   cursor:pointer;
@@ -55,12 +61,10 @@ button {
 }
 
 .btn-wa { background:#25D366; color:white; }
-.btn-delete { background:#dc3545; color:white; }
-.btn-confirm { background:#ffc107; }
 
 table {
-  width:100%;
   border-collapse:collapse;
+  min-width:800px;
 }
 
 th {
@@ -71,12 +75,22 @@ th {
 th, td {
   padding:12px;
   text-align:center;
-  border-bottom:1px solid #ddd;
+  border:1px solid #ddd;
 }
 
-.available { color:#28a745; font-weight:bold; }
-.booked { color:#dc3545; font-weight:bold; }
+.available {
+  background:#e6f9ec;
+}
 
+.booked {
+  background:#ffe6e6;
+  color:#dc3545;
+  font-weight:bold;
+}
+
+.table-wrapper {
+  overflow-x:auto;
+}
 </style>
 </head>
 
@@ -92,10 +106,8 @@ th, td {
 <div class="container">
 
 <div class="filter-box">
-  <h3>Jadwal Mingguan</h3>
-  <button onclick="prevWeek()">⬅️</button>
-  <span id="rangeTanggal"></span>
-  <button onclick="nextWeek()">➡️</button>
+  <h3>Pilih Tanggal</h3>
+  <input type="date" id="filterTanggal">
 </div>
 
 <div id="adminPanel" class="admin-panel" style="display:none;">
@@ -105,17 +117,11 @@ th, td {
   <button onclick="booking()">Tambah</button>
 </div>
 
+<div class="table-wrapper">
 <table>
-<thead>
-<tr>
-<th>Tanggal</th>
-<th>Jam</th>
-<th>Status</th>
-<th>Aksi</th>
-</tr>
-</thead>
 <tbody id="jadwal"></tbody>
 </table>
+</div>
 
 </div>
 
@@ -136,17 +142,15 @@ const firebaseConfig = {
   apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
   authDomain: "ekaputrafc-68823.firebaseapp.com",
   projectId: "ekaputrafc-68823"
-
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let currentDate = new Date();
-
 const times = ["07:00-11:00","11:00-14:00","14:00-18:00"];
 const jadwalEl = document.getElementById("jadwal");
 const jamSelect = document.getElementById("jam");
+const filterTanggal = document.getElementById("filterTanggal");
 
 times.forEach(j=>{
   let o=document.createElement("option");
@@ -155,118 +159,80 @@ times.forEach(j=>{
   jamSelect.appendChild(o);
 });
 
-function getWeekDates(date){
-  let start = new Date(date);
-  start.setDate(start.getDate() - start.getDay());
-
+function getDays(startDate){
   let days = [];
+  let base = new Date(startDate);
+
   for(let i=0;i<7;i++){
-    let d = new Date(start);
-    d.setDate(start.getDate()+i);
+    let d = new Date(base);
+    d.setDate(base.getDate() + i);
     days.push(d.toISOString().split("T")[0]);
   }
-  return days;
-}
 
-function updateRangeText(week){
-  document.getElementById("rangeTanggal").innerText =
-    new Date(week[0]).toLocaleDateString("id-ID") +
-    " - " +
-    new Date(week[6]).toLocaleDateString("id-ID");
+  return days;
 }
 
 function loadData(){
 
-let week = getWeekDates(currentDate);
-updateRangeText(week);
+let startDate = filterTanggal.value;
+let days = getDays(startDate);
 
 db.collection("bookings").onSnapshot(snapshot=>{
-jadwalEl.innerHTML="";
 
-week.forEach(tanggal=>{
+let html = "<tr><th>Jam</th>";
 
-  times.forEach(jam=>{
+days.forEach(tanggal=>{
+  html += `<th>${new Date(tanggal).toLocaleDateString("id-ID")}</th>`;
+});
+
+html += "</tr>";
+
+times.forEach(jam=>{
+
+  html += `<tr><td><b>${jam}</b></td>`;
+
+  days.forEach(tanggal=>{
 
     let found=null;
 
     snapshot.forEach(doc=>{
       let d=doc.data();
       if(d.jam===jam && d.tanggal===tanggal){
-        found={...d,id:doc.id};
+        found=d;
       }
     });
 
-    let status="Kosong";
-    let classStatus="available";
-    let aksi="";
-
     if(found){
-      status="Booked - "+found.nama;
-      classStatus="booked";
-
-      if(isAdmin){
-        aksi=`<button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>`;
-      }else{
-        aksi=`<button disabled>Booked</button>`;
-      }
-
+      html += `<td class="booked">Booked</td>`;
     }else{
-
-      if(isAdmin){
-        aksi=`<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>`;
-      }else{
-        aksi=`<a href="https://wa.me/6281563630245?text=Booking%20Lapangan%20Eka%20Putra%20FC%0ATanggal:%20${tanggal}%0AJam:%20${jam}%0AHarga:%20Rp150.000" target="_blank">
-        <button class="btn-wa">Booking</button></a>`;
-      }
-
+      html += `<td class="available">
+      <a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}%0AHarga:%20Rp150.000" target="_blank">
+      <button class="btn-wa">Booking</button></a>
+      </td>`;
     }
-
-    let row=document.createElement("tr");
-    row.innerHTML=`
-      <td>${new Date(tanggal).toLocaleDateString("id-ID")}</td>
-      <td>${jam}</td>
-      <td class="${classStatus}">${status}</td>
-      <td>${aksi}</td>
-    `;
-
-    jadwalEl.appendChild(row);
 
   });
 
+  html += "</tr>";
+
 });
+
+jadwalEl.innerHTML = html;
 
 });
 }
+
+filterTanggal.value = new Date().toISOString().split("T")[0];
+filterTanggal.addEventListener("change", loadData);
 
 loadData();
 
 function booking(){
 let nama=document.getElementById("nama").value;
 let jam=document.getElementById("jam").value;
-let tanggal = getWeekDates(currentDate)[0];
+let tanggal = filterTanggal.value;
 
 db.collection("bookings").add({nama,tanggal,jam});
-}
-
-function quickBooking(jam, tanggal){
-  let nama = prompt("Nama tim?");
-  if(!nama) return;
-
-  db.collection("bookings").add({nama,tanggal,jam});
-}
-
-function hapus(id){
-db.collection("bookings").doc(id).delete();
-}
-
-function nextWeek(){
-  currentDate.setDate(currentDate.getDate()+7);
-  loadData();
-}
-
-function prevWeek(){
-  currentDate.setDate(currentDate.getDate()-7);
-  loadData();
 }
 
 </script>

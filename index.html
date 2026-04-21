@@ -13,7 +13,6 @@ body {
   font-family: 'Segoe UI', sans-serif;
   margin:0;
   background: linear-gradient(135deg,#0d2b45,#1e4e79);
-  color:#333;
 }
 
 header {
@@ -24,7 +23,6 @@ header {
 
 header img {
   width:100px;
-  margin-bottom:10px;
 }
 
 .container {
@@ -36,19 +34,9 @@ header img {
   box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
 
-h2 {
-  margin:0;
-}
-
 .filter-box {
   text-align:center;
   margin-bottom:20px;
-}
-
-input[type="date"] {
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
 }
 
 .admin-panel {
@@ -56,13 +44,6 @@ input[type="date"] {
   padding:15px;
   border-radius:10px;
   margin-bottom:20px;
-}
-
-.admin-panel input, .admin-panel select {
-  padding:8px;
-  margin:5px;
-  border-radius:6px;
-  border:1px solid #ccc;
 }
 
 button {
@@ -73,29 +54,13 @@ button {
   font-weight:bold;
 }
 
-.btn-admin {
-  background:#1e4e79;
-  color:white;
-}
-
-.btn-wa {
-  background:#25D366;
-  color:white;
-}
-
-.btn-delete {
-  background:#dc3545;
-  color:white;
-}
-
-.btn-confirm {
-  background:#ffc107;
-}
+.btn-wa { background:#25D366; color:white; }
+.btn-delete { background:#dc3545; color:white; }
+.btn-confirm { background:#ffc107; }
 
 table {
   width:100%;
   border-collapse:collapse;
-  margin-top:10px;
 }
 
 th {
@@ -109,19 +74,9 @@ th, td {
   border-bottom:1px solid #ddd;
 }
 
-.available {
-  color:#28a745;
-  font-weight:bold;
-}
+.available { color:#28a745; font-weight:bold; }
+.booked { color:#dc3545; font-weight:bold; }
 
-.booked {
-  color:#dc3545;
-  font-weight:bold;
-}
-
-tr:hover {
-  background:#f9f9f9;
-}
 </style>
 </head>
 
@@ -131,26 +86,23 @@ tr:hover {
   <img src="logo.jpeg">
   <h2>EKA PUTRA FC ⚽</h2>
   <p>Booking Lapangan Online</p>
-  <p>Kp. Manggis Hilir RW 03, Des. Benda, Kec. Cicurug, Kab. Sukabumi</p>
+  <p>Kp. Manggis Hilir RW 03, Desa Benda, Sukabumi</p>
 </header>
 
 <div class="container">
 
 <div class="filter-box">
   <h3>Jadwal Mingguan</h3>
-
   <button onclick="prevWeek()">⬅️</button>
   <span id="rangeTanggal"></span>
   <button onclick="nextWeek()">➡️</button>
-
 </div>
 
 <div id="adminPanel" class="admin-panel" style="display:none;">
   <h3>Admin Panel</h3>
   <input type="text" id="nama" placeholder="Nama Tim">
-  <input type="date" id="tanggal">
   <select id="jam"></select>
-  <button class="btn-admin" onclick="booking()">Tambah</button>
+  <button onclick="booking()">Tambah</button>
 </div>
 
 <table>
@@ -168,8 +120,42 @@ tr:hover {
 </div>
 
 <script>
-  let currentDate = new Date();
-  function getWeekDates(date){
+
+const adminPassword = "12345";
+let isAdmin = false;
+
+if(window.location.search.includes("admin")){
+  let pass = prompt("Password admin:");
+  if(pass === adminPassword){
+    isAdmin = true;
+    document.getElementById("adminPanel").style.display = "block";
+  }
+}
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
+  authDomain: "ekaputrafc-68823.firebaseapp.com",
+  projectId: "ekaputrafc-68823"
+
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let currentDate = new Date();
+
+const times = ["07:00-11:00","11:00-14:00","14:00-18:00"];
+const jadwalEl = document.getElementById("jadwal");
+const jamSelect = document.getElementById("jam");
+
+times.forEach(j=>{
+  let o=document.createElement("option");
+  o.value=j;
+  o.textContent=j;
+  jamSelect.appendChild(o);
+});
+
+function getWeekDates(date){
   let start = new Date(date);
   start.setDate(start.getDate() - start.getDay());
 
@@ -188,41 +174,6 @@ function updateRangeText(week){
     " - " +
     new Date(week[6]).toLocaleDateString("id-ID");
 }
-
-const adminPassword = "12345";
-
-let isAdmin = false;
-if(window.location.search.includes("admin")){
-  let pass = prompt("Password admin:");
-  if(pass === adminPassword){
-    isAdmin = true;
-    document.getElementById("adminPanel").style.display = "block";
-  }
-}
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
-  authDomain: "ekaputrafc-68823.firebaseapp.com",
-  projectId: "ekaputrafc-68823"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-const times = ["07:00-11:00","11:00-14:00","14:00-18:00"];
-
-const jadwalEl = document.getElementById("jadwal");
-const jamSelect = document.getElementById("jam");
-const filterTanggal = document.getElementById("filterTanggal");
-
-times.forEach(j=>{
-  let o=document.createElement("option");
-  o.value=j;o.textContent=j;
-  jamSelect.appendChild(o);
-});
-
-// default hari ini
-filterTanggal.value = new Date().toISOString().split("T")[0];
 
 function loadData(){
 
@@ -264,7 +215,7 @@ week.forEach(tanggal=>{
       if(isAdmin){
         aksi=`<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>`;
       }else{
-        aksi=`<a href="https://wa.me/6281563630245?text=Booking%20Tanggal%20${tanggal}%20Jam%20${jam}%20Harga%20150K" target="_blank">
+        aksi=`<a href="https://wa.me/6281563630245?text=Booking%20Lapangan%20Eka%20Putra%20FC%0ATanggal:%20${tanggal}%0AJam:%20${jam}%0AHarga:%20Rp150.000" target="_blank">
         <button class="btn-wa">Booking</button></a>`;
       }
 
@@ -287,66 +238,12 @@ week.forEach(tanggal=>{
 });
 }
 
-db.collection("bookings").onSnapshot(snapshot=>{
-jadwalEl.innerHTML="";
-
-times.forEach(jam=>{
-let found=null;
-
-snapshot.forEach(doc=>{
-let d=doc.data();
-if(d.jam===jam && d.tanggal===selectedTanggal){
-found={...d,id:doc.id};
-}
-});
-
-let status="Kosong";
-let classStatus="available";
-let aksi="";
-
-if(found){
-status="Booked - "+found.nama;
-classStatus="booked";
-
-if(isAdmin){
-aksi=`<button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>`;
-}else{
-aksi=`<button disabled>Booked</button>`;
-}
-
-}else{
-
-if(isAdmin){
-aksi=`<button class="btn-confirm" onclick="quickBooking('${jam}')">Konfirmasi</button>`;
-}else{
-aksi=`<a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%20tanggal%20${selectedTanggal}%20jam%20${jam}" target="_blank">
-<button class="btn-wa">Booking</button></a>`;
-}
-
-}
-
-let row=document.createElement("tr");
-row.innerHTML=`
-<td>${new Date(selectedTanggal).toLocaleDateString("id-ID")}</td>
-<td>${jam}</td>
-<td class="${classStatus}">${status}</td>
-<td>${aksi}</td>
-`;
-
-jadwalEl.appendChild(row);
-
-});
-
-});
-}
-
-filterTanggal.addEventListener("change", loadData);
 loadData();
 
 function booking(){
 let nama=document.getElementById("nama").value;
-let tanggal=document.getElementById("tanggal").value;
 let jam=document.getElementById("jam").value;
+let tanggal = getWeekDates(currentDate)[0];
 
 db.collection("bookings").add({nama,tanggal,jam});
 }
@@ -355,16 +252,13 @@ function quickBooking(jam, tanggal){
   let nama = prompt("Nama tim?");
   if(!nama) return;
 
-  db.collection("bookings").add({
-    nama,
-    tanggal,
-    jam
-  });
+  db.collection("bookings").add({nama,tanggal,jam});
 }
 
 function hapus(id){
 db.collection("bookings").doc(id).delete();
 }
+
 function nextWeek(){
   currentDate.setDate(currentDate.getDate()+7);
   loadData();
@@ -374,6 +268,7 @@ function prevWeek(){
   currentDate.setDate(currentDate.getDate()-7);
   loadData();
 }
+
 </script>
 
 </body>

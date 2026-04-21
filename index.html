@@ -202,14 +202,31 @@ times.forEach(jam=>{
       }
     });
 
-    if(found){
-      html += `<td class="booked">Booked</td>`;
-    }else{
-      html += `<td class="available">
+if(found){
+
+  if(isAdmin){
+    html += `<td class="booked">
+      Booked<br>
+      <button onclick="hapus('${found.id}')">Hapus</button>
+    </td>`;
+  }else{
+    html += `<td class="booked">Booked</td>`;
+  }
+
+}else{
+
+  if(isAdmin){
+    html += `<td class="available">
+      <button onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>
+    </td>`;
+  }else{
+    html += `<td class="available">
       <a href="https://wa.me/6281563630245?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}%0AHarga:%20Rp150.000" target="_blank">
       <button class="btn-wa">Booking</button></a>
-      </td>`;
-    }
+    </td>`;
+  }
+
+}
 
   });
 
@@ -233,6 +250,20 @@ let jam=document.getElementById("jam").value;
 let tanggal = filterTanggal.value;
 
 db.collection("bookings").add({nama,tanggal,jam});
+}
+  function quickBooking(jam, tanggal){
+  let nama = prompt("Nama tim?");
+  if(!nama) return;
+
+  db.collection("bookings").add({
+    nama,
+    tanggal,
+    jam
+  });
+}
+
+function hapus(id){
+  db.collection("bookings").doc(id).delete();
 }
 
 </script>

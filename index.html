@@ -80,6 +80,21 @@ th, td {
   border:1px solid #ddd;
 }
 
+/* 🔥 FREEZE KOLOM JAM */
+th:first-child, td:first-child {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+}
+
+th:first-child {
+  background: #1e4e79;
+  color: white;
+  z-index: 3;
+}
+
+/* warna slot */
 .available {
   background:#e6f9ec;
 }
@@ -94,6 +109,12 @@ small {
   display:block;
   font-size:11px;
   color:#555;
+}
+
+/* 🔴 hari minggu */
+.minggu {
+  color:red;
+  font-weight:bold;
 }
 
 .table-wrapper {
@@ -189,7 +210,16 @@ db.collection("bookings").onSnapshot(snapshot=>{
 let html = "<tr><th>Jam</th>";
 
 days.forEach(tanggal=>{
-  html += `<th>${new Date(tanggal).toLocaleDateString("id-ID")}</th>`;
+
+  let dateObj = new Date(tanggal);
+  let hari = dateObj.toLocaleDateString("id-ID",{weekday:"long"});
+  let tanggalFormat = dateObj.toLocaleDateString("id-ID");
+
+  let isMinggu = dateObj.getDay() === 0;
+
+  html += `<th class="${isMinggu ? 'minggu' : ''}">
+    ${hari}<br>${tanggalFormat}
+  </th>`;
 });
 
 html += "</tr>";
@@ -205,7 +235,7 @@ times.forEach(jam=>{
     snapshot.forEach(doc=>{
       let d=doc.data();
       if(d.jam===jam && d.tanggal===tanggal){
-        found = {...d, id: doc.id}; // ✅ FIX PENTING
+        found = {...d, id: doc.id};
       }
     });
 

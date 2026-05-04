@@ -66,7 +66,7 @@ button {
 
 table {
   border-collapse:collapse;
-  min-width:800px;
+  min-width:1200px;
 }
 
 th {
@@ -80,7 +80,7 @@ th, td {
   border:1px solid #ddd;
 }
 
-/* 🔥 FREEZE KOLOM JAM */
+/* FREEZE KOLOM JAM */
 th:first-child, td:first-child {
   position: sticky;
   left: 0;
@@ -111,7 +111,7 @@ small {
   color:#555;
 }
 
-/* 🔴 hari minggu */
+/* hari minggu */
 .minggu {
   color:red;
   font-weight:bold;
@@ -188,11 +188,12 @@ times.forEach(j=>{
   jamSelect.appendChild(o);
 });
 
+/* 🔥 UBAH JADI 30 HARI */
 function getDays(startDate){
   let days = [];
   let base = new Date(startDate);
 
-  for(let i=0;i<7;i++){
+  for(let i=0;i<30;i++){
     let d = new Date(base);
     d.setDate(base.getDate() + i);
     days.push(d.toISOString().split("T")[0]);

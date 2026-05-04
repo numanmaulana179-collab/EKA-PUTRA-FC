@@ -257,7 +257,7 @@ times.forEach(jam=>{
     }else{
       html += `<td class="available">
         ${isAdmin 
-          ? `<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Booking</button>`
+          ? `<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>`
           : `<a href="https://wa.me/6282262656042?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}" target="_blank">
              <button class="btn-wa">Booking</button></a>`
         }

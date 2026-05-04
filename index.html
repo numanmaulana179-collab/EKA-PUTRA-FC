@@ -15,33 +15,24 @@ body {
   background:#f4f7fb;
 }
 
-/* 🔥 HEADER PRO (STICKY) */
+/* HEADER */
 header {
   position: sticky;
   top:0;
   z-index:100;
   background:#1e4e79;
   color:white;
-  padding:10px;
+  padding:12px;
   text-align:center;
-  box-shadow:0 2px 10px rgba(0,0,0,0.2);
 }
 
-header h2 {
-  margin:5px;
-  font-size:18px;
-}
+header h2 { margin:5px; }
+header p { margin:0; font-size:13px; }
 
-header p {
-  margin:0;
-  font-size:12px;
-  opacity:0.9;
-}
-
-/* 🔥 TOOLBAR */
+/* TOOLBAR */
 .toolbar {
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
   align-items:center;
   gap:10px;
   padding:10px;
@@ -52,49 +43,42 @@ header p {
   border-bottom:1px solid #ddd;
 }
 
-.toolbar input {
-  padding:6px;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-
 .nav-btn {
   background:#1e4e79;
   color:white;
-  padding:6px 10px;
+  padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
 }
 
-/* 🔥 CONTAINER */
+/* CONTAINER */
 .container {
   padding:10px;
 }
 
-/* 🔥 TABLE */
+/* TABLE BESAR LAGI */
 .table-wrapper {
   overflow-x:auto;
   background:white;
   border-radius:10px;
-  box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
 table {
   border-collapse:collapse;
-  min-width:1200px;
+  min-width:1500px; /* 🔥 diperbesar */
 }
 
 th {
   background:#1e4e79;
   color:white;
-  font-size:12px;
+  font-size:13px;
 }
 
 th, td {
-  padding:8px;
+  padding:12px; /* 🔥 diperbesar */
   text-align:center;
-  border:1px solid #eee;
-  font-size:12px;
+  border:1px solid #ddd;
+  font-size:13px;
 }
 
 /* FREEZE JAM */
@@ -112,38 +96,35 @@ th:first-child {
 }
 
 /* SLOT */
-.available {
-  background:#e8f8ee;
-}
-
+.available { background:#e6f9ec; }
 .booked {
   background:#ffe6e6;
-  color:#d63031;
+  color:#dc3545;
   font-weight:bold;
 }
 
 small {
   display:block;
-  font-size:10px;
+  font-size:11px;
 }
 
 /* MINGGU */
 .minggu {
-  color:#ff7675;
+  color:red;
   font-weight:bold;
 }
 
 button {
+  padding:6px 10px;
   border:none;
-  padding:5px 8px;
-  border-radius:5px;
+  border-radius:6px;
   cursor:pointer;
-  font-size:11px;
+  font-weight:bold;
 }
 
 .btn-wa { background:#25D366; color:white; }
-.btn-delete { background:#d63031; color:white; }
-.btn-confirm { background:#fdcb6e; }
+.btn-delete { background:#dc3545; color:white; }
+.btn-confirm { background:#ffc107; }
 
 .admin-panel {
   padding:10px;
@@ -217,6 +198,7 @@ times.forEach(j=>{
   jamSelect.appendChild(o);
 });
 
+/* 30 HARI */
 function getDays(startDate){
   let days = [];
   let base = new Date(startDate);
@@ -240,13 +222,13 @@ let html = "<tr><th>Jam</th>";
 
 days.forEach(tanggal=>{
   let d = new Date(tanggal);
-  let hari = d.toLocaleDateString("id-ID",{weekday:"short"});
-  let tgl = d.getDate();
+  let hari = d.toLocaleDateString("id-ID",{weekday:"long"});
+  let tanggalFull = d.toLocaleDateString("id-ID");
 
   let isMinggu = d.getDay() === 0;
 
   html += `<th class="${isMinggu ? 'minggu' : ''}">
-    ${hari}<br>${tgl}
+    ${hari}<br>${tanggalFull}
   </th>`;
 });
 
@@ -268,15 +250,16 @@ times.forEach(jam=>{
 
     if(found){
       html += `<td class="booked">
-        X
+        Booked
         <small>${found.nama}</small>
-        ${isAdmin ? `<button class="btn-delete" onclick="hapus('${found.id}')">x</button>` : ''}
+        ${isAdmin ? `<button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>` : ''}
       </td>`;
     }else{
       html += `<td class="available">
         ${isAdmin 
-          ? `<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">+</button>`
-          : `<a href="https://wa.me/6282262656042?text=Booking%20${tanggal}%20${jam}" target="_blank"><button class="btn-wa">+</button></a>`
+          ? `<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Booking</button>`
+          : `<a href="https://wa.me/6282262656042?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}" target="_blank">
+             <button class="btn-wa">Booking</button></a>`
         }
       </td>`;
     }

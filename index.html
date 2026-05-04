@@ -12,57 +12,72 @@
 body {
   font-family: 'Segoe UI', sans-serif;
   margin:0;
-  background: linear-gradient(135deg,#0d2b45,#1e4e79);
+  background:#f4f7fb;
 }
 
+/* 🔥 HEADER PRO (STICKY) */
 header {
-  text-align:center;
-  padding:30px;
+  position: sticky;
+  top:0;
+  z-index:100;
+  background:#1e4e79;
   color:white;
-}
-
-header img {
-  width:100px;
-}
-
-.container {
-  max-width:1100px;
-  margin:auto;
-  background:white;
-  padding:20px;
-  border-radius:15px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.2);
-}
-
-.filter-box {
-  text-align:center;
-  margin-bottom:20px;
-}
-
-.filter-box input {
   padding:10px;
-  border-radius:8px;
+  text-align:center;
+  box-shadow:0 2px 10px rgba(0,0,0,0.2);
+}
+
+header h2 {
+  margin:5px;
+  font-size:18px;
+}
+
+header p {
+  margin:0;
+  font-size:12px;
+  opacity:0.9;
+}
+
+/* 🔥 TOOLBAR */
+.toolbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  background:white;
+  position:sticky;
+  top:70px;
+  z-index:90;
+  border-bottom:1px solid #ddd;
+}
+
+.toolbar input {
+  padding:6px;
+  border-radius:6px;
   border:1px solid #ccc;
 }
 
-.admin-panel {
-  background:#f1f5f9;
-  padding:15px;
-  border-radius:10px;
-  margin-bottom:20px;
-}
-
-button {
+.nav-btn {
+  background:#1e4e79;
+  color:white;
   padding:6px 10px;
-  border:none;
   border-radius:6px;
   cursor:pointer;
-  font-weight:bold;
 }
 
-.btn-wa { background:#25D366; color:white; }
-.btn-delete { background:#dc3545; color:white; }
-.btn-confirm { background:#ffc107; }
+/* 🔥 CONTAINER */
+.container {
+  padding:10px;
+}
+
+/* 🔥 TABLE */
+.table-wrapper {
+  overflow-x:auto;
+  background:white;
+  border-radius:10px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
 
 table {
   border-collapse:collapse;
@@ -72,53 +87,69 @@ table {
 th {
   background:#1e4e79;
   color:white;
+  font-size:12px;
 }
 
 th, td {
-  padding:12px;
+  padding:8px;
   text-align:center;
-  border:1px solid #ddd;
+  border:1px solid #eee;
+  font-size:12px;
 }
 
-/* FREEZE KOLOM JAM */
+/* FREEZE JAM */
 th:first-child, td:first-child {
   position: sticky;
   left: 0;
   background: white;
   z-index: 2;
+  font-weight:bold;
 }
 
 th:first-child {
-  background: #1e4e79;
-  color: white;
-  z-index: 3;
+  background:#1e4e79;
+  color:white;
 }
 
-/* warna slot */
+/* SLOT */
 .available {
-  background:#e6f9ec;
+  background:#e8f8ee;
 }
 
 .booked {
   background:#ffe6e6;
-  color:#dc3545;
+  color:#d63031;
   font-weight:bold;
 }
 
 small {
   display:block;
-  font-size:11px;
-  color:#555;
+  font-size:10px;
 }
 
-/* hari minggu */
+/* MINGGU */
 .minggu {
-  color:red;
+  color:#ff7675;
   font-weight:bold;
 }
 
-.table-wrapper {
-  overflow-x:auto;
+button {
+  border:none;
+  padding:5px 8px;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:11px;
+}
+
+.btn-wa { background:#25D366; color:white; }
+.btn-delete { background:#d63031; color:white; }
+.btn-confirm { background:#fdcb6e; }
+
+.admin-panel {
+  padding:10px;
+  background:#fff;
+  margin-bottom:10px;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -126,21 +157,19 @@ small {
 <body>
 
 <header>
-  <img src="logo.jpeg">
   <h2>EKA PUTRA FC ⚽</h2>
   <p>Booking Lapangan Online</p>
-  <p>Kp. Manggis Hilir RW 03, Desa Benda, Sukabumi</p>
 </header>
+
+<div class="toolbar">
+  <button class="nav-btn" onclick="prev()">⬅</button>
+  <input type="date" id="filterTanggal">
+  <button class="nav-btn" onclick="next()">➡</button>
+</div>
 
 <div class="container">
 
-<div class="filter-box">
-  <h3>Pilih Tanggal</h3>
-  <input type="date" id="filterTanggal">
-</div>
-
 <div id="adminPanel" class="admin-panel" style="display:none;">
-  <h3>Admin Panel</h3>
   <input type="text" id="nama" placeholder="Nama Tim">
   <select id="jam"></select>
   <button onclick="booking()">Tambah</button>
@@ -188,7 +217,6 @@ times.forEach(j=>{
   jamSelect.appendChild(o);
 });
 
-/* 🔥 UBAH JADI 30 HARI */
 function getDays(startDate){
   let days = [];
   let base = new Date(startDate);
@@ -211,23 +239,21 @@ db.collection("bookings").onSnapshot(snapshot=>{
 let html = "<tr><th>Jam</th>";
 
 days.forEach(tanggal=>{
+  let d = new Date(tanggal);
+  let hari = d.toLocaleDateString("id-ID",{weekday:"short"});
+  let tgl = d.getDate();
 
-  let dateObj = new Date(tanggal);
-  let hari = dateObj.toLocaleDateString("id-ID",{weekday:"long"});
-  let tanggalFormat = dateObj.toLocaleDateString("id-ID");
-
-  let isMinggu = dateObj.getDay() === 0;
+  let isMinggu = d.getDay() === 0;
 
   html += `<th class="${isMinggu ? 'minggu' : ''}">
-    ${hari}<br>${tanggalFormat}
+    ${hari}<br>${tgl}
   </th>`;
 });
 
 html += "</tr>";
 
 times.forEach(jam=>{
-
-  html += `<tr><td><b>${jam}</b></td>`;
+  html += `<tr><td>${jam}</td>`;
 
   days.forEach(tanggal=>{
 
@@ -241,39 +267,23 @@ times.forEach(jam=>{
     });
 
     if(found){
-
-      if(isAdmin){
-        html += `<td class="booked">
-          Booked
-          <small>${found.nama}</small>
-          <button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>
-        </td>`;
-      }else{
-        html += `<td class="booked">
-          Booked
-          <small>${found.nama}</small>
-        </td>`;
-      }
-
+      html += `<td class="booked">
+        X
+        <small>${found.nama}</small>
+        ${isAdmin ? `<button class="btn-delete" onclick="hapus('${found.id}')">x</button>` : ''}
+      </td>`;
     }else{
-
-      if(isAdmin){
-        html += `<td class="available">
-          <button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>
-        </td>`;
-      }else{
-        html += `<td class="available">
-          <a href="https://wa.me/6282262656042?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}%0AHarga Main Biasa:150.000%0AHarga Trafeo:250.000" target="_blank">
-          <button class="btn-wa">Booking</button></a>
-        </td>`;
-      }
-
+      html += `<td class="available">
+        ${isAdmin 
+          ? `<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">+</button>`
+          : `<a href="https://wa.me/6282262656042?text=Booking%20${tanggal}%20${jam}" target="_blank"><button class="btn-wa">+</button></a>`
+        }
+      </td>`;
     }
 
   });
 
   html += "</tr>";
-
 });
 
 jadwalEl.innerHTML = html;
@@ -282,6 +292,21 @@ jadwalEl.innerHTML = html;
 }
 
 filterTanggal.value = new Date().toISOString().split("T")[0];
+
+function next(){
+  let d = new Date(filterTanggal.value);
+  d.setDate(d.getDate()+30);
+  filterTanggal.value = d.toISOString().split("T")[0];
+  loadData();
+}
+
+function prev(){
+  let d = new Date(filterTanggal.value);
+  d.setDate(d.getDate()-30);
+  filterTanggal.value = d.toISOString().split("T")[0];
+  loadData();
+}
+
 filterTanggal.addEventListener("change", loadData);
 
 loadData();

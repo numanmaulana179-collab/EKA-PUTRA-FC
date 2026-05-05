@@ -82,6 +82,7 @@ th:first-child, td:first-child {
   left: 0;
   background: white;
   z-index: 2;
+  font-weight:bold;
 }
 
 th:first-child {
@@ -97,7 +98,7 @@ th:first-child {
   font-weight:bold;
 }
 
-/* 🔴 TANGGAL MERAH */
+/* TANGGAL MERAH */
 .minggu {
   color:red;
   font-weight:bold;
@@ -122,7 +123,7 @@ button {
 <header>
   <h2>EKA PUTRA FC ⚽</h2>
   <p>Booking Lapangan Online</p>
-  <p>Kp. Manggis Hilir RW 03, Desa Benda, Cicurug-Sukabumi</p>
+  <p>Kp. Manggis Hilir RW 03, Desa Benda, Sukabumi</p>
 
   <a href="https://maps.app.goo.gl/akowsd4otisXjZAc7" target="_blank">
     <button style="margin-top:6px;background:#00b894;color:white;">
@@ -156,7 +157,7 @@ if(window.location.search.includes("admin")){
 }
 
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
+  apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
   authDomain: "ekaputrafc-68823.firebaseapp.com",
   projectId: "ekaputrafc-68823"
 };
@@ -168,19 +169,20 @@ const times = ["07:00-11:00","11:00-14:00","14:00-18:00"];
 const jadwalEl = document.getElementById("jadwal");
 const filterTanggal = document.getElementById("filterTanggal");
 
-/* 🔴 LIST TANGGAL MERAH */
-const tanggalMerah = [
-  "2026-01-01",
-  "2026-02-17",
-  "2026-03-19",
-  "2026-04-10",
-  "2026-05-01",
-  "2026-05-14",
-  "2026-06-01",
-  "2026-08-17",
-  "2026-12-25"
-];
+/* 🔴 TANGGAL MERAH DARI API */
+let tanggalMerah = [];
 
+async function loadTanggalMerah(){
+  try{
+    let res = await fetch("https://date.nager.at/api/v3/PublicHolidays/2026/ID");
+    let data = await res.json();
+    tanggalMerah = data.map(item => item.date);
+  }catch(e){
+    console.log("Gagal ambil tanggal merah", e);
+  }
+}
+
+/* 30 HARI */
 function getDays(startDate){
   let days = [];
   let base = new Date(startDate);
@@ -237,12 +239,15 @@ times.forEach(jam=>{
       html += `<td class="booked">
         Booked
         <small>${found.nama}</small>
+        ${isAdmin ? `<button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>` : ''}
       </td>`;
     }else{
       html += `<td class="available">
-        <a href="https://wa.me/6282262656042?text=Booking%20${tanggal}%20${jam}" target="_blank">
-          <button class="btn-wa">Booking</button>
-        </a>
+        ${isAdmin 
+          ? `<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>`
+          : `<a href="https://wa.me/6282262656042?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}" target="_blank">
+             <button class="btn-wa">Booking</button></a>`
+        }
       </td>`;
     }
 
@@ -256,11 +261,17 @@ jadwalEl.innerHTML = html;
 });
 }
 
+/* INIT */
 filterTanggal.value = new Date().toISOString().split("T")[0];
-filterTanggal.addEventListener("change", loadData);
 
-loadData();
+async function init(){
+  await loadTanggalMerah();
+  loadData();
+}
 
+init();
+
+/* NAVIGASI */
 function next(){
   let d = new Date(filterTanggal.value);
   d.setDate(d.getDate()+30);
@@ -273,6 +284,20 @@ function prev(){
   d.setDate(d.getDate()-30);
   filterTanggal.value = d.toISOString().split("T")[0];
   loadData();
+}
+
+filterTanggal.addEventListener("change", loadData);
+
+/* CRUD */
+function quickBooking(jam, tanggal){
+  let nama = prompt("Nama tim?");
+  if(!nama) return;
+
+  db.collection("bookings").add({nama,tanggal,jam});
+}
+
+function hapus(id){
+  db.collection("bookings").doc(id).delete();
 }
 
 </script>

@@ -51,11 +51,6 @@ header p { margin:2px 0; font-size:13px; }
   cursor:pointer;
 }
 
-/* CONTAINER */
-.container {
-  padding:10px;
-}
-
 /* TABLE */
 .table-wrapper {
   overflow-x:auto;
@@ -81,13 +76,12 @@ th, td {
   font-size:13px;
 }
 
-/* FREEZE JAM */
+/* FREEZE */
 th:first-child, td:first-child {
   position: sticky;
   left: 0;
   background: white;
   z-index: 2;
-  font-weight:bold;
 }
 
 th:first-child {
@@ -103,12 +97,7 @@ th:first-child {
   font-weight:bold;
 }
 
-small {
-  display:block;
-  font-size:11px;
-}
-
-/* MINGGU */
+/* 🔴 TANGGAL MERAH */
 .minggu {
   color:red;
   font-weight:bold;
@@ -125,13 +114,6 @@ button {
 .btn-wa { background:#25D366; color:white; }
 .btn-delete { background:#dc3545; color:white; }
 .btn-confirm { background:#ffc107; }
-
-.admin-panel {
-  padding:10px;
-  background:#fff;
-  margin-bottom:10px;
-  border-radius:10px;
-}
 </style>
 </head>
 
@@ -155,20 +137,10 @@ button {
   <button class="nav-btn" onclick="next()">➡</button>
 </div>
 
-<div class="container">
-
-<div id="adminPanel" class="admin-panel" style="display:none;">
-  <input type="text" id="nama" placeholder="Nama Tim">
-  <select id="jam"></select>
-  <button onclick="booking()">Tambah</button>
-</div>
-
 <div class="table-wrapper">
 <table>
 <tbody id="jadwal"></tbody>
 </table>
-</div>
-
 </div>
 
 <script>
@@ -180,12 +152,11 @@ if(window.location.search.includes("admin")){
   let pass = prompt("Password admin:");
   if(pass === adminPassword){
     isAdmin = true;
-    document.getElementById("adminPanel").style.display = "block";
   }
 }
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
+  apiKey: "AIzaSy...",
   authDomain: "ekaputrafc-68823.firebaseapp.com",
   projectId: "ekaputrafc-68823"
 };
@@ -195,17 +166,21 @@ const db = firebase.firestore();
 
 const times = ["07:00-11:00","11:00-14:00","14:00-18:00"];
 const jadwalEl = document.getElementById("jadwal");
-const jamSelect = document.getElementById("jam");
 const filterTanggal = document.getElementById("filterTanggal");
 
-times.forEach(j=>{
-  let o=document.createElement("option");
-  o.value=j;
-  o.textContent=j;
-  jamSelect.appendChild(o);
-});
+/* 🔴 LIST TANGGAL MERAH */
+const tanggalMerah = [
+  "2026-01-01",
+  "2026-02-17",
+  "2026-03-19",
+  "2026-04-10",
+  "2026-05-01",
+  "2026-05-14",
+  "2026-06-01",
+  "2026-08-17",
+  "2026-12-25"
+];
 
-/* 30 HARI */
 function getDays(startDate){
   let days = [];
   let base = new Date(startDate);
@@ -229,12 +204,15 @@ let html = "<tr><th>Jam</th>";
 
 days.forEach(tanggal=>{
   let d = new Date(tanggal);
+
   let hari = d.toLocaleDateString("id-ID",{weekday:"long"});
   let tanggalFull = d.toLocaleDateString("id-ID");
 
   let isMinggu = d.getDay() === 0;
+  let isLibur = tanggalMerah.includes(tanggal);
+  let isRedDay = isMinggu || isLibur;
 
-  html += `<th class="${isMinggu ? 'minggu' : ''}">
+  html += `<th class="${isRedDay ? 'minggu' : ''}">
     ${hari}<br>${tanggalFull}
   </th>`;
 });
@@ -259,15 +237,12 @@ times.forEach(jam=>{
       html += `<td class="booked">
         Booked
         <small>${found.nama}</small>
-        ${isAdmin ? `<button class="btn-delete" onclick="hapus('${found.id}')">Hapus</button>` : ''}
       </td>`;
     }else{
       html += `<td class="available">
-        ${isAdmin 
-          ? `<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>`
-          : `<a href="https://wa.me/6282262656042?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}" target="_blank">
-             <button class="btn-wa">Booking</button></a>`
-        }
+        <a href="https://wa.me/6282262656042?text=Booking%20${tanggal}%20${jam}" target="_blank">
+          <button class="btn-wa">Booking</button>
+        </a>
       </td>`;
     }
 
@@ -282,6 +257,9 @@ jadwalEl.innerHTML = html;
 }
 
 filterTanggal.value = new Date().toISOString().split("T")[0];
+filterTanggal.addEventListener("change", loadData);
+
+loadData();
 
 function next(){
   let d = new Date(filterTanggal.value);
@@ -295,29 +273,6 @@ function prev(){
   d.setDate(d.getDate()-30);
   filterTanggal.value = d.toISOString().split("T")[0];
   loadData();
-}
-
-filterTanggal.addEventListener("change", loadData);
-
-loadData();
-
-function booking(){
-let nama=document.getElementById("nama").value;
-let jam=document.getElementById("jam").value;
-let tanggal = filterTanggal.value;
-
-db.collection("bookings").add({nama,tanggal,jam});
-}
-
-function quickBooking(jam, tanggal){
-  let nama = prompt("Nama tim?");
-  if(!nama) return;
-
-  db.collection("bookings").add({nama,tanggal,jam});
-}
-
-function hapus(id){
-  db.collection("bookings").doc(id).delete();
 }
 
 </script>

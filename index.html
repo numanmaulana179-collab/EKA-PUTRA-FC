@@ -15,7 +15,6 @@ body {
   background:#f4f7fb;
 }
 
-/* HEADER */
 header {
   position: sticky;
   top:0;
@@ -29,18 +28,15 @@ header {
 header h2 { margin:5px; }
 header p { margin:2px 0; font-size:13px; }
 
-/* TOOLBAR */
 .toolbar {
   display:flex;
   justify-content:center;
-  align-items:center;
   gap:10px;
   padding:10px;
   background:white;
   position:sticky;
   top:80px;
   z-index:90;
-  border-bottom:1px solid #ddd;
 }
 
 .nav-btn {
@@ -51,11 +47,9 @@ header p { margin:2px 0; font-size:13px; }
   cursor:pointer;
 }
 
-/* TABLE */
 .table-wrapper {
   overflow-x:auto;
   background:white;
-  border-radius:10px;
 }
 
 table {
@@ -66,23 +60,20 @@ table {
 th {
   background:#1e4e79;
   color:white;
-  font-size:13px;
 }
 
 th, td {
   padding:12px;
   text-align:center;
   border:1px solid #ddd;
-  font-size:13px;
 }
 
-/* FREEZE */
+/* freeze kolom jam */
 th:first-child, td:first-child {
   position: sticky;
   left: 0;
   background: white;
   z-index: 2;
-  font-weight:bold;
 }
 
 th:first-child {
@@ -90,7 +81,7 @@ th:first-child {
   color:white;
 }
 
-/* SLOT */
+/* warna */
 .available { background:#e6f9ec; }
 .booked {
   background:#ffe6e6;
@@ -98,7 +89,6 @@ th:first-child {
   font-weight:bold;
 }
 
-/* TANGGAL MERAH */
 .minggu {
   color:red;
   font-weight:bold;
@@ -113,8 +103,9 @@ button {
 }
 
 .btn-wa { background:#25D366; color:white; }
-.btn-delete { background:#dc3545; color:white; }
 .btn-confirm { background:#ffc107; }
+.btn-delete { background:#dc3545; color:white; }
+
 </style>
 </head>
 
@@ -123,7 +114,7 @@ button {
 <header>
   <h2>EKA PUTRA FC ⚽</h2>
   <p>Booking Lapangan Online</p>
-  <p>Kp. Manggis Hilir RW 03, Desa Benda, Sukabumi</p>
+  <p>Kp. Manggis Hilir RW 03, Desa Benda, Cicurug-Sukabumi</p>
 
   <a href="https://maps.app.goo.gl/akowsd4otisXjZAc7" target="_blank">
     <button style="margin-top:6px;background:#00b894;color:white;">
@@ -169,20 +160,36 @@ const times = ["07:00-11:00","11:00-14:00","14:00-18:00"];
 const jadwalEl = document.getElementById("jadwal");
 const filterTanggal = document.getElementById("filterTanggal");
 
-/* 🔴 TANGGAL MERAH DARI API */
+/* 🔴 HARI BESAR ISLAM */
+const tanggalIslam = [
+  "2026-01-17",
+  "2026-03-20",
+  "2026-03-21",
+  "2026-05-27",
+  "2026-06-16",
+  "2026-08-26"
+];
+
 let tanggalMerah = [];
 
+/* 🔴 AMBIL API + GABUNG */
 async function loadTanggalMerah(){
   try{
     let res = await fetch("https://date.nager.at/api/v3/PublicHolidays/2026/ID");
     let data = await res.json();
-    tanggalMerah = data.map(item => item.date);
+
+    let apiDates = data.map(item => item.date);
+
+    // gabungkan API + Islam
+    tanggalMerah = [...new Set([...apiDates, ...tanggalIslam])];
+
   }catch(e){
-    console.log("Gagal ambil tanggal merah", e);
+    console.log("Gagal ambil API, pakai fallback Islam saja");
+    tanggalMerah = tanggalIslam;
   }
 }
 
-/* 30 HARI */
+/* 30 hari */
 function getDays(startDate){
   let days = [];
   let base = new Date(startDate);
@@ -245,7 +252,7 @@ times.forEach(jam=>{
       html += `<td class="available">
         ${isAdmin 
           ? `<button class="btn-confirm" onclick="quickBooking('${jam}','${tanggal}')">Konfirmasi</button>`
-          : `<a href="https://wa.me/6282262656042?text=Halo%20saya%20ingin%20booking%20lapangan%0ATanggal:%20${tanggal}%0AJam:%20${jam}" target="_blank">
+          : `<a href="https://wa.me/6282262656042?text=Booking%20${tanggal}%20${jam}" target="_blank">
              <button class="btn-wa">Booking</button></a>`
         }
       </td>`;
@@ -268,10 +275,9 @@ async function init(){
   await loadTanggalMerah();
   loadData();
 }
-
 init();
 
-/* NAVIGASI */
+/* NAV */
 function next(){
   let d = new Date(filterTanggal.value);
   d.setDate(d.getDate()+30);
@@ -292,7 +298,6 @@ filterTanggal.addEventListener("change", loadData);
 function quickBooking(jam, tanggal){
   let nama = prompt("Nama tim?");
   if(!nama) return;
-
   db.collection("bookings").add({nama,tanggal,jam});
 }
 

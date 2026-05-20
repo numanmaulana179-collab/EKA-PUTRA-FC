@@ -12,50 +12,51 @@
 <style>
 
 *{
+  margin:0;
+  padding:0;
   box-sizing:border-box;
 }
 
 body{
-  margin:0;
   font-family:'Segoe UI',sans-serif;
   background:#f4f7fb;
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
 
 header{
   background:#1e4e79;
   color:white;
   text-align:center;
-  padding:20px 15px 15px;
+  padding:18px 15px;
   position:sticky;
   top:0;
   z-index:100;
 }
 
 header h2{
-  margin:0;
-  font-size:32px;
+  font-size:28px;
+  margin-bottom:5px;
 }
 
 header p{
-  margin:4px 0;
-  font-size:14px;
+  font-size:13px;
+  margin:2px 0;
 }
 
-/* TOOLBAR */
+/* ================= TOOLBAR ================= */
 
 .toolbar{
+  background:white;
+  padding:10px;
   display:flex;
   justify-content:center;
   align-items:center;
   gap:10px;
-  padding:8px;
-  background:white;
   position:sticky;
   top:110px;
   z-index:99;
-  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 .nav-btn{
@@ -63,7 +64,7 @@ header p{
   color:white;
   border:none;
   padding:8px 14px;
-  border-radius:8px;
+  border-radius:7px;
   cursor:pointer;
   font-weight:bold;
 }
@@ -72,7 +73,7 @@ header p{
   opacity:0.9;
 }
 
-/* TABLE */
+/* ================= TABLE ================= */
 
 .table-wrapper{
   overflow:auto;
@@ -82,15 +83,12 @@ header p{
 table{
   border-collapse:collapse;
   width:100%;
-  min-width:1500px;
+  min-width:1600px;
 }
 
 th{
   background:#1e4e79;
   color:white;
-  position:sticky;
-  top:165px;
-  z-index:5;
 }
 
 th, td{
@@ -106,7 +104,7 @@ th:first-child,
 td:first-child{
   position:sticky;
   left:0;
-  z-index:6;
+  z-index:2;
   background:white;
   font-weight:bold;
 }
@@ -116,7 +114,7 @@ th:first-child{
   color:white;
 }
 
-/* WARNA */
+/* ================= WARNA ================= */
 
 .available{
   background:#e6f9ec;
@@ -129,10 +127,10 @@ th:first-child{
 }
 
 .minggu{
-  color:#ffdddd;
+  color:#ffcccc;
 }
 
-/* BUTTON */
+/* ================= BUTTON ================= */
 
 button{
   border:none;
@@ -158,28 +156,20 @@ button{
 
 small{
   display:block;
-  margin:5px 0;
+  margin-top:5px;
   color:#333;
 }
 
-/* MOBILE */
+/* ================= MOBILE ================= */
 
 @media(max-width:768px){
 
   header h2{
-    font-size:24px;
-  }
-
-  header p{
-    font-size:12px;
+    font-size:22px;
   }
 
   .toolbar{
-    top:98px;
-  }
-
-  th{
-    top:150px;
+    top:95px;
   }
 
 }
@@ -198,7 +188,7 @@ small{
   <p>
     Kp. Manggis Hilir RW 03,
     Desa Benda,
-    Cicurug-Sukabumi
+    Cicurug - Sukabumi
   </p>
 
   <a href="https://maps.app.goo.gl/akowsd4otisXjZAc7" target="_blank">
@@ -225,7 +215,9 @@ small{
 
   <table>
 
-    <thead id="thead"></thead>
+    <thead>
+      <tr id="thead"></tr>
+    </thead>
 
     <tbody id="jadwal"></tbody>
 
@@ -235,11 +227,10 @@ small{
 
 <script>
 
-/* =========================
-   ADMIN
-========================= */
+/* ================= ADMIN ================= */
 
 const adminPassword = "12345";
+
 let isAdmin = false;
 
 if(window.location.search.includes("admin")){
@@ -252,9 +243,7 @@ if(window.location.search.includes("admin")){
 
 }
 
-/* =========================
-   FIREBASE
-========================= */
+/* ================= FIREBASE ================= */
 
 const firebaseConfig = {
 
@@ -270,23 +259,25 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 
-/* =========================
-   DATA
-========================= */
-
-const times = [
-  "07:00-11:00",
-  "11:00-14:00",
-  "14:00-18:00"
-];
+/* ================= ELEMENT ================= */
 
 const jadwalEl = document.getElementById("jadwal");
 
+const theadEl = document.getElementById("thead");
+
 const filterTanggal = document.getElementById("filterTanggal");
 
-/* =========================
-   TANGGAL MERAH
-========================= */
+/* ================= JAM ================= */
+
+const times = [
+
+  "07:00-11:00",
+  "11:00-14:00",
+  "14:00-18:00"
+
+];
+
+/* ================= TANGGAL MERAH ================= */
 
 const tanggalIslam = [
 
@@ -319,7 +310,7 @@ async function loadTanggalMerah(){
 
   }catch(e){
 
-    console.log("Gagal ambil API");
+    console.log("Gagal ambil tanggal merah");
 
     tanggalMerah = tanggalIslam;
 
@@ -327,33 +318,41 @@ async function loadTanggalMerah(){
 
 }
 
-/* =========================
-   FORMAT TANGGAL
-========================= */
+/* ================= FORMAT TANGGAL ================= */
 
 function formatTanggal(date){
 
-  let year = date.getFullYear();
+  let yyyy = date.getFullYear();
 
-  let month = String(
-    date.getMonth() + 1
+  let mm = String(
+    date.getMonth()+1
   ).padStart(2,'0');
 
-  let day = String(
+  let dd = String(
     date.getDate()
   ).padStart(2,'0');
 
-  return `${year}-${month}-${day}`;
+  return `${yyyy}-${mm}-${dd}`;
 
 }
 
-/* =========================
-   30 HARI
-========================= */
+/* ================= SET TODAY ================= */
+
+function setToday(){
+
+  filterTanggal.value = formatTanggal(
+    new Date()
+  );
+
+}
+
+/* ================= GET DAYS ================= */
 
 function getDays(startDate){
 
   let days = [];
+
+  if(!startDate) return days;
 
   let base = new Date(startDate);
 
@@ -363,7 +362,9 @@ function getDays(startDate){
 
     d.setDate(base.getDate()+i);
 
-    days.push(formatTanggal(d));
+    days.push(
+      formatTanggal(d)
+    );
 
   }
 
@@ -371,9 +372,7 @@ function getDays(startDate){
 
 }
 
-/* =========================
-   LOAD DATA
-========================= */
+/* ================= LOAD DATA ================= */
 
 let unsubscribe = null;
 
@@ -383,6 +382,10 @@ function loadData(){
 
   let days = getDays(startDate);
 
+  if(days.length === 0){
+    return;
+  }
+
   if(unsubscribe){
     unsubscribe();
   }
@@ -391,12 +394,9 @@ function loadData(){
   .collection("bookings")
   .onSnapshot(snapshot=>{
 
-    /* HEADER */
+    /* ===== HEADER ===== */
 
-    let headHtml = `
-      <tr>
-        <th>Jam</th>
-    `;
+    let headHtml = "<th>Jam</th>";
 
     days.forEach(tanggal=>{
 
@@ -404,19 +404,21 @@ function loadData(){
 
       let hari = d.toLocaleDateString(
         "id-ID",
-        {weekday:"long"}
+        { weekday:"long" }
       );
 
-      let tanggalFull = d.toLocaleDateString("id-ID");
+      let tanggalFull = d.toLocaleDateString(
+        "id-ID"
+      );
 
       let isMinggu = d.getDay() === 0;
 
       let isLibur = tanggalMerah.includes(tanggal);
 
-      let isRedDay = isMinggu || isLibur;
+      let merah = isMinggu || isLibur;
 
       headHtml += `
-        <th class="${isRedDay ? 'minggu' : ''}">
+        <th class="${merah ? 'minggu' : ''}">
           ${hari}<br>
           ${tanggalFull}
         </th>
@@ -424,13 +426,9 @@ function loadData(){
 
     });
 
-    headHtml += "</tr>";
+    theadEl.innerHTML = headHtml;
 
-    document
-    .getElementById("thead")
-    .innerHTML = headHtml;
-
-    /* BODY */
+    /* ===== BODY ===== */
 
     let bodyHtml = "";
 
@@ -447,21 +445,23 @@ function loadData(){
 
         snapshot.forEach(doc=>{
 
-          let d = doc.data();
+          let data = doc.data();
 
           if(
-            d.jam === jam &&
-            d.tanggal === tanggal
+            data.jam === jam &&
+            data.tanggal === tanggal
           ){
 
             found = {
-              ...d,
+              ...data,
               id:doc.id
             };
 
           }
 
         });
+
+        /* ===== ADA BOOKING ===== */
 
         if(found){
 
@@ -474,12 +474,12 @@ function loadData(){
 
             ${isAdmin
               ? `
-              <button
-                class="btn-delete"
-                onclick="hapus('${found.id}')"
-              >
-                Hapus
-              </button>
+                <button
+                  class="btn-delete"
+                  onclick="hapus('${found.id}')"
+                >
+                  Hapus
+                </button>
               `
               : ''
             }
@@ -487,7 +487,11 @@ function loadData(){
           </td>
           `;
 
-        }else{
+        }
+
+        /* ===== KOSONG ===== */
+
+        else{
 
           bodyHtml += `
           <td class="available">
@@ -534,13 +538,13 @@ function loadData(){
 
 }
 
-/* =========================
-   NAVIGASI
-========================= */
+/* ================= NAVIGASI ================= */
 
 function next(){
 
-  let d = new Date(filterTanggal.value);
+  let d = new Date(
+    filterTanggal.value
+  );
 
   d.setDate(d.getDate()+30);
 
@@ -552,7 +556,9 @@ function next(){
 
 function prev(){
 
-  let d = new Date(filterTanggal.value);
+  let d = new Date(
+    filterTanggal.value
+  );
 
   d.setDate(d.getDate()-30);
 
@@ -567,21 +573,19 @@ filterTanggal.addEventListener(
   loadData
 );
 
-/* =========================
-   CRUD
-========================= */
+/* ================= CRUD ================= */
 
 function quickBooking(jam,tanggal){
 
-  let nama = prompt("Nama tim?");
+  let nama = prompt("Nama Tim?");
 
   if(!nama) return;
 
   db.collection("bookings").add({
 
     nama,
-    tanggal,
-    jam
+    jam,
+    tanggal
 
   });
 
@@ -589,25 +593,23 @@ function quickBooking(jam,tanggal){
 
 function hapus(id){
 
-  if(confirm("Hapus booking?")){
+  let yakin = confirm(
+    "Hapus booking?"
+  );
 
-    db.collection("bookings")
-    .doc(id)
-    .delete();
+  if(!yakin) return;
 
-  }
+  db.collection("bookings")
+  .doc(id)
+  .delete();
 
 }
 
-/* =========================
-   INIT
-========================= */
-
-filterTanggal.value = formatTanggal(
-  new Date()
-);
+/* ================= INIT ================= */
 
 async function init(){
+
+  setToday();
 
   await loadTanggalMerah();
 

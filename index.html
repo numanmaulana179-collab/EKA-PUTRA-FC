@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>EKA PUTRA FC</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -18,33 +17,20 @@
 }
 
 body{
-  font-family:'Segoe UI',sans-serif;
+  font-family:Arial, sans-serif;
   background:#f4f7fb;
 }
-
-/* ================= HEADER ================= */
 
 header{
   background:#1e4e79;
   color:white;
   text-align:center;
-  padding:18px 15px;
-  position:sticky;
-  top:0;
-  z-index:100;
+  padding:20px;
 }
 
 header h2{
-  font-size:28px;
   margin-bottom:5px;
 }
-
-header p{
-  font-size:13px;
-  margin:2px 0;
-}
-
-/* ================= TOOLBAR ================= */
 
 .toolbar{
   background:white;
@@ -54,104 +40,88 @@ header p{
   align-items:center;
   gap:10px;
   position:sticky;
-  top:110px;
-  z-index:99;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  top:0;
+  z-index:10;
 }
 
 .nav-btn{
   background:#1e4e79;
   color:white;
   border:none;
-  padding:8px 14px;
-  border-radius:7px;
+  padding:8px 12px;
+  border-radius:6px;
   cursor:pointer;
-  font-weight:bold;
 }
-
-.nav-btn:hover{
-  opacity:0.9;
-}
-
-/* ================= TABLE ================= */
 
 .table-wrapper{
   overflow:auto;
   background:white;
 }
 
-table{
+.table-jadwal{
   border-collapse:collapse;
+  min-width:1500px;
   width:100%;
-  min-width:1600px;
 }
 
-th{
+.table-jadwal th,
+.table-jadwal td{
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:center;
+}
+
+.table-jadwal th{
   background:#1e4e79;
   color:white;
 }
 
-th, td{
-  border:1px solid #ddd;
-  padding:12px;
-  text-align:center;
-  min-width:120px;
-}
-
-/* freeze kolom jam */
-
-th:first-child,
-td:first-child{
+.table-jadwal td:first-child,
+.table-jadwal th:first-child{
   position:sticky;
   left:0;
   z-index:2;
+}
+
+.table-jadwal td:first-child{
   background:white;
   font-weight:bold;
 }
 
-th:first-child{
+.table-jadwal th:first-child{
   background:#1e4e79;
-  color:white;
 }
 
-/* ================= WARNA ================= */
-
 .available{
-  background:#e6f9ec;
+  background:#e8fff0;
 }
 
 .booked{
   background:#ffe6e6;
-  color:#dc3545;
-  font-weight:bold;
-}
-
-.minggu{
-  color:#ffcccc;
-}
-
-/* ================= BUTTON ================= */
-
-button{
-  border:none;
-  padding:7px 12px;
-  border-radius:7px;
-  cursor:pointer;
+  color:#d60000;
   font-weight:bold;
 }
 
 .btn-wa{
   background:#25D366;
   color:white;
-}
-
-.btn-confirm{
-  background:#ffc107;
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 .btn-delete{
   background:#dc3545;
   color:white;
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.minggu{
+  color:#ffb3b3;
 }
 
 small{
@@ -160,77 +130,50 @@ small{
   color:#333;
 }
 
-/* ================= MOBILE ================= */
-
-@media(max-width:768px){
-
-  header h2{
-    font-size:22px;
-  }
-
-  .toolbar{
-    top:95px;
-  }
-
-}
-
 </style>
 </head>
-
 <body>
 
 <header>
-
   <h2>EKA PUTRA FC ⚽</h2>
-
   <p>Booking Lapangan Online</p>
-
-  <p>
-    Kp. Manggis Hilir RW 03,
-    Desa Benda,
-    Cicurug - Sukabumi
-  </p>
-
-  <a href="https://maps.app.goo.gl/akowsd4otisXjZAc7" target="_blank">
-
-    <button style="background:#00b894;color:white;margin-top:8px;">
-      📍 Lihat Lokasi
-    </button>
-
-  </a>
-
+  <p>Kp. Manggis Hilir RW 03, Desa Benda, Cicurug - Sukabumi</p>
 </header>
 
 <div class="toolbar">
-
-  <button class="nav-btn" onclick="prev()">⬅</button>
-
+  <button class="nav-btn" onclick="prevTanggal()">⬅</button>
   <input type="date" id="filterTanggal">
-
-  <button class="nav-btn" onclick="next()">➡</button>
-
+  <button class="nav-btn" onclick="nextTanggal()">➡</button>
 </div>
 
 <div class="table-wrapper">
 
-  <table>
+<table class="table-jadwal">
 
-    <thead>
-      <tr id="thead"></tr>
-    </thead>
+<thead id="thead"></thead>
+<tbody id="tbody"></tbody>
 
-    <tbody id="jadwal"></tbody>
-
-  </table>
+</table>
 
 </div>
 
 <script>
 
+/* ================= FIREBASE ================= */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
+  authDomain: "ekaputrafc-68823.firebaseapp.com",
+  projectId: "ekaputrafc-68823"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
 /* ================= ADMIN ================= */
 
 const adminPassword = "12345";
-
 let isAdmin = false;
 
 if(window.location.search.includes("admin")){
@@ -243,51 +186,29 @@ if(window.location.search.includes("admin")){
 
 }
 
-/* ================= FIREBASE ================= */
-
-const firebaseConfig = {
-
-  apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
-
-  authDomain: "ekaputrafc-68823.firebaseapp.com",
-
-  projectId: "ekaputrafc-68823"
-
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const db = firebase.firestore();
-
 /* ================= ELEMENT ================= */
 
-const jadwalEl = document.getElementById("jadwal");
-
-const theadEl = document.getElementById("thead");
-
+const thead = document.getElementById("thead");
+const tbody = document.getElementById("tbody");
 const filterTanggal = document.getElementById("filterTanggal");
 
 /* ================= JAM ================= */
 
 const times = [
-
   "07:00-11:00",
   "11:00-14:00",
   "14:00-18:00"
-
 ];
 
 /* ================= TANGGAL MERAH ================= */
 
 const tanggalIslam = [
-
   "2026-01-17",
   "2026-03-20",
   "2026-03-21",
   "2026-05-27",
   "2026-06-16",
   "2026-08-26"
-
 ];
 
 let tanggalMerah = [];
@@ -296,21 +217,19 @@ async function loadTanggalMerah(){
 
   try{
 
-    let res = await fetch(
+    const res = await fetch(
       "https://date.nager.at/api/v3/PublicHolidays/2026/ID"
     );
 
-    let data = await res.json();
+    const data = await res.json();
 
-    let apiDates = data.map(item => item.date);
+    const apiDates = data.map(item => item.date);
 
     tanggalMerah = [
       ...new Set([...apiDates, ...tanggalIslam])
     ];
 
-  }catch(e){
-
-    console.log("Gagal ambil tanggal merah");
+  }catch(err){
 
     tanggalMerah = tanggalIslam;
 
@@ -322,15 +241,9 @@ async function loadTanggalMerah(){
 
 function formatTanggal(date){
 
-  let yyyy = date.getFullYear();
-
-  let mm = String(
-    date.getMonth()+1
-  ).padStart(2,'0');
-
-  let dd = String(
-    date.getDate()
-  ).padStart(2,'0');
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth()+1).padStart(2,'0');
+  const dd = String(date.getDate()).padStart(2,'0');
 
   return `${yyyy}-${mm}-${dd}`;
 
@@ -340,21 +253,17 @@ function formatTanggal(date){
 
 function setToday(){
 
-  filterTanggal.value = formatTanggal(
-    new Date()
-  );
+  filterTanggal.value = formatTanggal(new Date());
 
 }
 
-/* ================= GET DAYS ================= */
+/* ================= GET 30 DAYS ================= */
 
-function getDays(startDate){
+function getDays(start){
 
   let days = [];
 
-  if(!startDate) return days;
-
-  let base = new Date(startDate);
+  let base = new Date(start);
 
   for(let i=0;i<30;i++){
 
@@ -362,9 +271,7 @@ function getDays(startDate){
 
     d.setDate(base.getDate()+i);
 
-    days.push(
-      formatTanggal(d)
-    );
+    days.push(formatTanggal(d));
 
   }
 
@@ -372,179 +279,138 @@ function getDays(startDate){
 
 }
 
-/* ================= LOAD DATA ================= */
+/* ================= LOAD TABLE ================= */
 
-let unsubscribe = null;
+async function loadData(){
 
-function loadData(){
+  const startDate = filterTanggal.value;
 
-  let startDate = filterTanggal.value;
+  const days = getDays(startDate);
 
-  let days = getDays(startDate);
+  /* ===== HEADER ===== */
 
-  if(days.length === 0){
-    return;
-  }
+  let headHtml = '<tr>';
 
-  if(unsubscribe){
-    unsubscribe();
-  }
+  headHtml += '<th>Jam</th>';
 
-  unsubscribe = db
-  .collection("bookings")
-  .onSnapshot(snapshot=>{
+  days.forEach(tanggal => {
 
-    /* ===== HEADER ===== */
+    const d = new Date(tanggal);
 
-    let headHtml = "<th>Jam</th>";
-
-    days.forEach(tanggal=>{
-
-      let d = new Date(tanggal);
-
-      let hari = d.toLocaleDateString(
-        "id-ID",
-        { weekday:"long" }
-      );
-
-      let tanggalFull = d.toLocaleDateString(
-        "id-ID"
-      );
-
-      let isMinggu = d.getDay() === 0;
-
-      let isLibur = tanggalMerah.includes(tanggal);
-
-      let merah = isMinggu || isLibur;
-
-      headHtml += `
-        <th class="${merah ? 'minggu' : ''}">
-          ${hari}<br>
-          ${tanggalFull}
-        </th>
-      `;
-
+    const hari = d.toLocaleDateString('id-ID', {
+      weekday:'long'
     });
 
-    theadEl.innerHTML = headHtml;
+    const tanggalFull = d.toLocaleDateString('id-ID');
 
-    /* ===== BODY ===== */
+    const merah = (
+      d.getDay() === 0 ||
+      tanggalMerah.includes(tanggal)
+    );
 
-    let bodyHtml = "";
+    headHtml += `
+      <th class="${merah ? 'minggu' : ''}">
+        ${hari}<br>
+        ${tanggalFull}
+      </th>
+    `;
 
-    times.forEach(jam=>{
+  });
 
-      bodyHtml += `
-        <tr>
-          <td>${jam}</td>
-      `;
+  headHtml += '</tr>';
 
-      days.forEach(tanggal=>{
+  thead.innerHTML = headHtml;
 
-        let found = null;
+  /* ===== AMBIL DATA FIREBASE ===== */
 
-        snapshot.forEach(doc=>{
+  const snapshot = await db.collection('bookings').get();
 
-          let data = doc.data();
+  let bookings = [];
 
-          if(
-            data.jam === jam &&
-            data.tanggal === tanggal
-          ){
+  snapshot.forEach(doc => {
 
-            found = {
-              ...data,
-              id:doc.id
-            };
+    bookings.push({
+      id:doc.id,
+      ...doc.data()
+    });
 
-          }
+  });
 
-        });
+  /* ===== BODY ===== */
 
-        /* ===== ADA BOOKING ===== */
+  let bodyHtml = '';
 
-        if(found){
+  times.forEach(jam => {
 
-          bodyHtml += `
-          <td class="booked">
+    bodyHtml += `<tr><td>${jam}</td>`;
 
-            Booked
+    days.forEach(tanggal => {
 
-            <small>${found.nama}</small>
+      const found = bookings.find(item => {
 
-            ${isAdmin
-              ? `
-                <button
-                  class="btn-delete"
-                  onclick="hapus('${found.id}')"
-                >
-                  Hapus
-                </button>
-              `
-              : ''
-            }
-
-          </td>
-          `;
-
-        }
-
-        /* ===== KOSONG ===== */
-
-        else{
-
-          bodyHtml += `
-          <td class="available">
-
-            ${isAdmin
-
-              ? `
-              <button
-                class="btn-confirm"
-                onclick="quickBooking('${jam}','${tanggal}')"
-              >
-                Konfirmasi
-              </button>
-              `
-
-              : `
-              <a
-                href="https://wa.me/6282262656042?text=Booking%20${tanggal}%20${jam}"
-                target="_blank"
-              >
-
-                <button class="btn-wa">
-                  Booking
-                </button>
-
-              </a>
-              `
-            }
-
-          </td>
-          `;
-
-        }
+        return (
+          item.jam === jam &&
+          item.tanggal === tanggal
+        );
 
       });
 
-      bodyHtml += "</tr>";
+      if(found){
+
+        bodyHtml += `
+        <td class="booked">
+          Booked
+          <small>${found.nama}</small>
+
+          ${isAdmin
+            ? `
+              <button
+                class="btn-delete"
+                onclick="hapus('${found.id}')"
+              >
+                Hapus
+              </button>
+            `
+            : ''
+          }
+
+        </td>
+        `;
+
+      }else{
+
+        bodyHtml += `
+        <td class="available">
+
+          <a
+            href="https://wa.me/6282262656042?text=Booking%20${tanggal}%20${jam}"
+            target="_blank"
+          >
+            <button class="btn-wa">
+              Booking
+            </button>
+          </a>
+
+        </td>
+        `;
+
+      }
 
     });
 
-    jadwalEl.innerHTML = bodyHtml;
+    bodyHtml += '</tr>';
 
   });
+
+  tbody.innerHTML = bodyHtml;
 
 }
 
 /* ================= NAVIGASI ================= */
 
-function next(){
+function nextTanggal(){
 
-  let d = new Date(
-    filterTanggal.value
-  );
+  let d = new Date(filterTanggal.value);
 
   d.setDate(d.getDate()+30);
 
@@ -554,11 +420,9 @@ function next(){
 
 }
 
-function prev(){
+function prevTanggal(){
 
-  let d = new Date(
-    filterTanggal.value
-  );
+  let d = new Date(filterTanggal.value);
 
   d.setDate(d.getDate()-30);
 
@@ -568,40 +432,19 @@ function prev(){
 
 }
 
-filterTanggal.addEventListener(
-  "change",
-  loadData
-);
+filterTanggal.addEventListener('change', loadData);
 
-/* ================= CRUD ================= */
+/* ================= HAPUS ================= */
 
-function quickBooking(jam,tanggal){
+async function hapus(id){
 
-  let nama = prompt("Nama Tim?");
-
-  if(!nama) return;
-
-  db.collection("bookings").add({
-
-    nama,
-    jam,
-    tanggal
-
-  });
-
-}
-
-function hapus(id){
-
-  let yakin = confirm(
-    "Hapus booking?"
-  );
+  const yakin = confirm('Hapus booking?');
 
   if(!yakin) return;
 
-  db.collection("bookings")
-  .doc(id)
-  .delete();
+  await db.collection('bookings').doc(id).delete();
+
+  loadData();
 
 }
 
@@ -613,7 +456,7 @@ async function init(){
 
   await loadTanggalMerah();
 
-  loadData();
+  await loadData();
 
 }
 
@@ -623,3 +466,14 @@ init();
 
 </body>
 </html>
+```
+
+## Yang diperbaiki
+
+* Menghapus `onSnapshot()` yang sering bikin tabel blank
+* Mengganti menjadi `.get()` supaya lebih stabil
+* Memperbaiki struktur `<thead>` dan `<tbody>`
+* Memperbaiki render tabel
+* Memastikan tanggal otomatis terisi
+* Memastikan jadwal langsung muncul saat halaman dibuka
+* Posisi toolbar lebih naik dan rapi

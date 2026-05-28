@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EKA PUTRA FC</title>
 
-<!-- Firebase -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -54,7 +54,6 @@ header p{
   border-radius:8px;
   font-weight:bold;
   cursor:pointer;
-  transition:0.2s;
 }
 
 .maps-btn:hover{
@@ -65,7 +64,7 @@ header p{
 
 .toolbar{
   position:sticky;
-  top:140px;
+  top:135px;
   z-index:999;
   background:white;
   padding:12px;
@@ -211,13 +210,13 @@ button{
     font-size:26px;
   }
 
+  .toolbar{
+    top:155px;
+  }
+
   th, td{
     font-size:12px;
     padding:10px;
-  }
-
-  .toolbar{
-    top:160px;
   }
 
 }
@@ -227,16 +226,15 @@ button{
 
 <body>
 
-<!-- HEADER -->
+<!-- ================= HEADER ================= -->
+
 <header>
 
   <h1>EKA PUTRA FC ⚽</h1>
 
   <p>Booking Lapangan Online</p>
 
-  <p>
-    Kp. Manggis Hilir RW 03, Desa Benda, Sukabumi
-  </p>
+  <p>Kp. Manggis Hilir RW 03, Desa Benda, Sukabumi</p>
 
   <a href="https://maps.app.goo.gl/akowsd4otisXjZAc7" target="_blank">
     <button class="maps-btn">
@@ -246,7 +244,8 @@ button{
 
 </header>
 
-<!-- TOOLBAR -->
+<!-- ================= TOOLBAR ================= -->
+
 <div class="toolbar">
 
   <button class="nav-btn" onclick="prev()">
@@ -261,7 +260,8 @@ button{
 
 </div>
 
-<!-- ADMIN PANEL -->
+<!-- ================= ADMIN PANEL ================= -->
+
 <div id="adminPanel" class="admin-panel">
 
   <input type="text" id="nama" placeholder="Nama Tim">
@@ -274,7 +274,8 @@ button{
 
 </div>
 
-<!-- TABLE -->
+<!-- ================= TABLE ================= -->
+
 <div class="container">
 
   <div class="table-wrapper">
@@ -292,6 +293,7 @@ button{
 /* ================= ADMIN ================= */
 
 const adminPassword = "12345";
+
 let isAdmin = false;
 
 if(window.location.search.includes("admin")){
@@ -309,8 +311,11 @@ if(window.location.search.includes("admin")){
 /* ================= FIREBASE ================= */
 
 const firebaseConfig = {
+
   apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
+
   authDomain: "ekaputrafc-68823.firebaseapp.com",
+
   projectId: "ekaputrafc-68823"
 };
 
@@ -327,7 +332,9 @@ const times = [
 ];
 
 const jadwalEl = document.getElementById("jadwal");
+
 const filterTanggal = document.getElementById("filterTanggal");
+
 const jamSelect = document.getElementById("jam");
 
 times.forEach(j=>{
@@ -335,6 +342,7 @@ times.forEach(j=>{
   let o = document.createElement("option");
 
   o.value = j;
+
   o.textContent = j;
 
   jamSelect.appendChild(o);
@@ -344,12 +352,14 @@ times.forEach(j=>{
 /* ================= TANGGAL MERAH ================= */
 
 const tanggalIslam = [
+
   "2026-01-17",
   "2026-03-20",
   "2026-03-21",
   "2026-05-27",
   "2026-06-16",
   "2026-08-26"
+
 ];
 
 let tanggalMerah = [];
@@ -361,10 +371,6 @@ async function loadTanggalMerah(){
     let res = await fetch(
       "https://date.nager.at/api/v3/PublicHolidays/2026/ID"
     );
-
-    if(!res.ok){
-      throw new Error("API gagal");
-    }
 
     let data = await res.json();
 
@@ -385,7 +391,7 @@ async function loadTanggalMerah(){
   }
 }
 
-/* ================= HELPER ================= */
+/* ================= GET 30 HARI ================= */
 
 function getDays(startDate){
 
@@ -407,22 +413,13 @@ function getDays(startDate){
   return days;
 }
 
-/* ================= REALTIME LISTENER ================= */
-
-let unsubscribeBookings = null;
-
-/* ================= LOAD TABLE ================= */
+/* ================= LOAD DATA ================= */
 
 function loadData(){
 
   let startDate = filterTanggal.value;
 
   let days = getDays(startDate);
-
-  /* hentikan listener lama */
-  if(unsubscribeBookings){
-    unsubscribeBookings();
-  }
 
   jadwalEl.innerHTML = `
     <tr>
@@ -432,13 +429,14 @@ function loadData(){
     </tr>
   `;
 
-  unsubscribeBookings = db.collection("bookings")
+  db.collection("bookings")
+  .get()
 
-  .onSnapshot(snapshot=>{
+  .then(snapshot=>{
 
     let html = "<tr><th>Jam</th>";
 
-    /* HEADER HARI */
+    /* HEADER */
     days.forEach(tanggal=>{
 
       let d = new Date(tanggal);
@@ -468,7 +466,7 @@ function loadData(){
 
     html += "</tr>";
 
-    /* CONVERT SNAPSHOT */
+    /* BOOKING DATA */
     let bookingData = [];
 
     snapshot.forEach(doc=>{
@@ -480,7 +478,7 @@ function loadData(){
 
     });
 
-    /* ROW JAM */
+    /* ROW */
     times.forEach(jam=>{
 
       html += `<tr><td>${jam}</td>`;
@@ -499,9 +497,7 @@ function loadData(){
 
               Booked
 
-              <small>
-                ${found.nama}
-              </small>
+              <small>${found.nama}</small>
 
               ${
                 isAdmin
@@ -557,7 +553,9 @@ function loadData(){
 
     jadwalEl.innerHTML = html;
 
-  }, error=>{
+  })
+
+  .catch(error=>{
 
     console.log(error);
 
@@ -611,7 +609,9 @@ function booking(){
   let tanggal = filterTanggal.value;
 
   if(!nama){
+
     alert("Nama tim wajib diisi");
+
     return;
   }
 
@@ -619,9 +619,16 @@ function booking(){
     nama,
     tanggal,
     jam
+  })
+
+  .then(()=>{
+
+    document.getElementById("nama").value = "";
+
+    loadData();
+
   });
 
-  document.getElementById("nama").value = "";
 }
 
 function quickBooking(jam, tanggal){
@@ -634,7 +641,14 @@ function quickBooking(jam, tanggal){
     nama,
     tanggal,
     jam
+  })
+
+  .then(()=>{
+
+    loadData();
+
   });
+
 }
 
 function hapus(id){
@@ -643,7 +657,13 @@ function hapus(id){
 
     db.collection("bookings")
     .doc(id)
-    .delete();
+    .delete()
+
+    .then(()=>{
+
+      loadData();
+
+    });
   }
 }
 

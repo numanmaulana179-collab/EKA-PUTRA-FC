@@ -1,14 +1,22 @@
+html
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Kas Bola</title>
 
 <style>
 
-body{
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
     font-family:Arial;
+}
+
+body{
     background:#f2f2f2;
     padding:20px;
 }
@@ -21,20 +29,28 @@ body{
 .card{
     background:white;
     padding:20px;
-    border-radius:10px;
+    border-radius:12px;
+    margin-bottom:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+h1{
     margin-bottom:20px;
 }
 
 input{
-    padding:10px;
+    padding:12px;
     width:70%;
+    border:1px solid #ccc;
+    border-radius:8px;
 }
 
 button{
-    padding:10px;
+    padding:12px 15px;
     border:none;
-    border-radius:5px;
+    border-radius:8px;
     cursor:pointer;
+    font-weight:bold;
 }
 
 .btnTambah{
@@ -49,6 +65,7 @@ button{
 
 .btnMatch{
     background:orange;
+    color:black;
 }
 
 table{
@@ -56,15 +73,21 @@ table{
     border-collapse:collapse;
 }
 
-th,td{
-    border:1px solid #ddd;
-    padding:10px;
-    text-align:center;
-}
-
 th{
     background:#2196f3;
     color:white;
+}
+
+th,td{
+    padding:12px;
+    border:1px solid #ddd;
+    text-align:center;
+}
+
+.total{
+    margin-top:20px;
+    font-size:20px;
+    font-weight:bold;
 }
 
 </style>
@@ -74,13 +97,16 @@ th{
 
 <div class="container">
 
+<h1>Kas & Iuran Match</h1>
+
 <div class="card">
 
-<h2>Tambah Anggota</h2>
+<input type="text"
+id="nama"
+placeholder="Masukkan nama anggota">
 
-<input type="text" id="nama" placeholder="Nama anggota">
-
-<button class="btnTambah" onclick="tambahAnggota()">
+<button class="btnTambah"
+onclick="tambahAnggota()">
 Tambah
 </button>
 
@@ -103,42 +129,49 @@ Tambah
 
 </table>
 
+<div class="total">
+Total Kas :
+Rp <span id="totalKas">0</span>
+</div>
+
 </div>
 
 </div>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-getDatabase,
-ref,
-push,
-onValue,
-update
+getFirestore,
+collection,
+addDoc,
+onSnapshot,
+doc,
+updateDoc,
+increment
 }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-
-  apiKey: "PASTE_APIKEY",
-  authDomain: "PASTE_AUTHDOMAIN",
-  databaseURL: "PASTE_DATABASEURL",
-  projectId: "PASTE_PROJECTID",
-  storageBucket: "PASTE_STORAGE",
-  messagingSenderId: "PASTE_SENDERID",
-  appId: "PASTE_APPID"
-
+  apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
+  authDomain: "ekaputrafc-68823.firebaseapp.com",
+  databaseURL: "https://ekaputrafc-68823-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ekaputrafc-68823",
+  storageBucket: "ekaputrafc-68823.firebasestorage.app",
+  messagingSenderId: "582282824017",
+  appId: "1:582282824017:web:125b431feca5e85a1e6b70",
+  measurementId: "G-Q1WJQJRLQR"
 };
 
 const app = initializeApp(firebaseConfig);
 
-const db = getDatabase(app);
+const db = getFirestore(app);
 
-const anggotaRef = ref(db, "kasbola/anggota");
+const anggotaRef = collection(db,"kasbola");
 
-window.tambahAnggota = function(){
+window.tambahAnggota = async function(){
 
     const nama = document.getElementById("nama").value;
 
@@ -147,7 +180,7 @@ window.tambahAnggota = function(){
         return;
     }
 
-    push(anggotaRef,{
+    await addDoc(anggotaRef,{
         nama:nama,
         kas:0,
         match:0
@@ -156,40 +189,42 @@ window.tambahAnggota = function(){
     document.getElementById("nama").value = "";
 }
 
-onValue(anggotaRef,(snapshot)=>{
-
-    const data = snapshot.val();
+onSnapshot(anggotaRef,(snapshot)=>{
 
     const tbody = document.getElementById("tbody");
 
     tbody.innerHTML = "";
 
-    for(let id in data){
+    let totalKas = 0;
 
-        let item = data[id];
+    snapshot.forEach((docSnap)=>{
+
+        const data = docSnap.data();
+
+        totalKas += data.kas || 0;
 
         tbody.innerHTML += `
         <tr>
 
-        <td>${item.nama}</td>
+        <td>${data.nama}</td>
 
         <td>
-        Rp ${item.kas || 0}
+        Rp ${data.kas || 0}
         </td>
 
         <td>
-        Rp ${item.match || 0}
+        Rp ${data.match || 0}
         </td>
 
         <td>
 
         <button class="btnKas"
-        onclick="bayarKas('${id}')">
+        onclick="bayarKas('${docSnap.id}')">
         Bayar Kas
         </button>
 
         <button class="btnMatch"
-        onclick="bayarMatch('${id}')">
+        onclick="bayarMatch('${docSnap.id}')">
         Bayar Match
         </button>
 
@@ -197,51 +232,44 @@ onValue(anggotaRef,(snapshot)=>{
 
         </tr>
         `;
-    }
+    });
+
+    document.getElementById("totalKas").innerText =
+    totalKas.toLocaleString();
 
 });
 
-window.bayarKas = function(id){
+window.bayarKas = async function(id){
 
-    let nominal = prompt("Nominal kas","10000");
+    let nominal = prompt(
+        "Masukkan nominal kas",
+        "10000"
+    );
 
     if(!nominal) return;
 
-    const itemRef = ref(db,'kasbola/anggota/'+id);
+    const refDoc = doc(db,"kasbola",id);
 
-    onValue(itemRef,(snap)=>{
-
-        let data = snap.val();
-
-        let total = (data.kas || 0) + parseInt(nominal);
-
-        update(itemRef,{
-            kas:total
-        });
-
-    },{onlyOnce:true});
+    await updateDoc(refDoc,{
+        kas: increment(parseInt(nominal))
+    });
 
 }
 
-window.bayarMatch = function(id){
+window.bayarMatch = async function(id){
 
-    let nominal = prompt("Nominal match","5000");
+    let nominal = prompt(
+        "Masukkan nominal match",
+        "5000"
+    );
 
     if(!nominal) return;
 
-    const itemRef = ref(db,'kasbola/anggota/'+id);
+    const refDoc = doc(db,"kasbola",id);
 
-    onValue(itemRef,(snap)=>{
-
-        let data = snap.val();
-
-        let total = (data.match || 0) + parseInt(nominal);
-
-        update(itemRef,{
-            match:total
-        });
-
-    },{onlyOnce:true});
+    await updateDoc(refDoc,{
+        match: increment(parseInt(nominal))
+    });
 
 }
 

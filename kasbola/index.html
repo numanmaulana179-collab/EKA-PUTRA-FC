@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Kas Bola Harian</title>
+<title>Kas Bulanan Tim Bola</title>
 
 <style>
 
@@ -25,16 +25,16 @@ body{
     margin:auto;
 }
 
-h1{
-    margin-bottom:20px;
-}
-
 .card{
     background:white;
     padding:20px;
     border-radius:12px;
     margin-bottom:20px;
     box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+h1{
+    margin-bottom:20px;
 }
 
 .top{
@@ -58,6 +58,11 @@ button{
     font-weight:bold;
 }
 
+.btnLoad{
+    background:#444;
+    color:white;
+}
+
 .btnTambah{
     background:green;
     color:white;
@@ -71,11 +76,6 @@ button{
 .btnMatch{
     background:orange;
     color:black;
-}
-
-.btnLoad{
-    background:#444;
-    color:white;
 }
 
 .btnReset{
@@ -128,11 +128,23 @@ th,td{
     color:#2196f3;
 }
 
+.statusBelum{
+    background:#ffb3b3;
+}
+
+.statusCicil{
+    background:#fff0a6;
+}
+
+.statusLunas{
+    background:#b8ffb8;
+}
+
 .actionButtons{
     display:flex;
     gap:5px;
-    flex-wrap:wrap;
     justify-content:center;
+    flex-wrap:wrap;
 }
 
 .menuContainer{
@@ -153,8 +165,8 @@ th,td{
     background:white;
     min-width:120px;
     border-radius:8px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.2);
     overflow:hidden;
+    box-shadow:0 2px 10px rgba(0,0,0,0.2);
     z-index:999;
 }
 
@@ -162,23 +174,6 @@ th,td{
     width:100%;
     border-radius:0;
     text-align:left;
-    padding:12px;
-}
-
-.dropdownMenu button:hover{
-    background:#f2f2f2;
-}
-
-.statusBelum{
-    background:#ffb3b3 !important;
-}
-
-.statusCicil{
-    background:#fff0a6 !important;
-}
-
-.statusLunas{
-    background:#b8ffb8 !important;
 }
 
 @media(max-width:700px){
@@ -187,21 +182,14 @@ th,td{
         flex-direction:column;
     }
 
-    input{
-        width:100%;
-    }
-
     table{
         font-size:12px;
-    }
-
-    .actionButtons{
-        flex-direction:column;
     }
 
     button{
         width:100%;
     }
+
 }
 
 </style>
@@ -211,7 +199,7 @@ th,td{
 
 <div class="container">
 
-<h1>Kas & Iuran Match Harian</h1>
+<h1>Kas Bulanan Tim Bola</h1>
 
 <div class="card">
 
@@ -219,9 +207,10 @@ th,td{
 
 <input type="date" id="tanggal">
 
-<button class="btnLoad"
+<button
+class="btnLoad"
 onclick="loadData()">
-Load Tanggal
+Load Data
 </button>
 
 </div>
@@ -244,7 +233,7 @@ placeholder="Tambah / Cari anggota">
 <button
 class="btnTambah"
 onclick="tambahAnggota()">
-Tambah Anggota
+Tambah
 </button>
 
 <button
@@ -256,7 +245,7 @@ Cari
 <button
 class="btnLoad"
 onclick="resetCari()">
-Reset Cari
+Reset
 </button>
 
 </div>
@@ -272,8 +261,8 @@ Reset Cari
 <tr>
 <th>No</th>
 <th>Nama</th>
-<th>Kas</th>
-<th>Match</th>
+<th>Kas Bulanan</th>
+<th>Iuran Match</th>
 <th>Aksi</th>
 </tr>
 
@@ -335,54 +324,18 @@ const firebaseConfig = {
   appId: "1:582282824017:web:125b431feca5e85a1e6b70"
 };
 
-const TARGET_KAS = 10000;
-const TARGET_MATCH = 5000;
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let tanggalAktif = "";
+const TARGET_KAS = 10000;
+const TARGET_MATCH = 5000;
+
 let keywordCari = "";
+let tanggalAktif = "";
+let bulanAktif = "";
 
 document.getElementById("tanggal").valueAsDate =
 new Date();
-
-window.tambahAnggota = async function(){
-
-    const nama =
-    document.getElementById("nama")
-    .value
-    .trim();
-
-    if(nama == ""){
-        alert("Nama kosong");
-        return;
-    }
-
-    const anggotaMaster =
-    doc(db,"anggota",nama);
-
-    const cekNama =
-    await getDoc(anggotaMaster);
-
-    if(cekNama.exists()){
-
-        alert("Nama sudah ada");
-        return;
-    }
-
-    await setDoc(anggotaMaster,{
-        nama:nama
-    });
-
-    document.getElementById("nama").value = "";
-
-    alert("Anggota berhasil ditambahkan");
-
-    if(tanggalAktif != ""){
-        loadData();
-    }
-}
 
 window.cariAnggota = function(){
 
@@ -403,6 +356,41 @@ window.resetCari = function(){
     renderTable();
 }
 
+window.tambahAnggota = async function(){
+
+    const nama =
+    document.getElementById("nama")
+    .value
+    .trim();
+
+    if(nama == ""){
+        alert("Nama kosong");
+        return;
+    }
+
+    const anggotaRef =
+    doc(db,"anggota",nama);
+
+    const cek =
+    await getDoc(anggotaRef);
+
+    if(cek.exists()){
+
+        alert("Nama sudah ada");
+        return;
+    }
+
+    await setDoc(anggotaRef,{
+        nama:nama
+    });
+
+    alert("Anggota berhasil ditambahkan");
+
+    document.getElementById("nama").value = "";
+
+    loadData();
+}
+
 window.loadData = async function(){
 
     tanggalAktif =
@@ -412,6 +400,9 @@ window.loadData = async function(){
         alert("Pilih tanggal");
         return;
     }
+
+    bulanAktif =
+    tanggalAktif.substring(0,7);
 
     const anggotaCollection =
     collection(db,"anggota");
@@ -424,21 +415,21 @@ window.loadData = async function(){
         const nama =
         anggotaDoc.data().nama;
 
-        const dataHarianRef =
+        const kasRef =
         doc(
             db,
-            "kasbola",
-            tanggalAktif,
+            "kasbulanan",
+            bulanAktif,
             "anggota",
             nama
         );
 
-        const cek =
-        await getDoc(dataHarianRef);
+        const cekKas =
+        await getDoc(kasRef);
 
-        if(!cek.exists()){
+        if(!cekKas.exists()){
 
-            await setDoc(dataHarianRef,{
+            await setDoc(kasRef,{
                 nama:nama,
                 kas:0,
                 match:0
@@ -470,16 +461,16 @@ async function renderTable(){
 
     tbody.innerHTML = "";
 
+    let nomor = 1;
     let totalKas = 0;
     let totalMatch = 0;
-    let nomor = 1;
     let totalAnggota = 0;
 
     const anggotaRef =
     collection(
         db,
-        "kasbola",
-        tanggalAktif,
+        "kasbulanan",
+        bulanAktif,
         "anggota"
     );
 
@@ -605,8 +596,8 @@ window.bayarKas = async function(nama){
     const anggotaDoc =
     doc(
         db,
-        "kasbola",
-        tanggalAktif,
+        "kasbulanan",
+        bulanAktif,
         "anggota",
         nama
     );
@@ -631,8 +622,8 @@ window.bayarMatch = async function(nama){
     const anggotaDoc =
     doc(
         db,
-        "kasbola",
-        tanggalAktif,
+        "kasbulanan",
+        bulanAktif,
         "anggota",
         nama
     );
@@ -647,17 +638,15 @@ window.bayarMatch = async function(nama){
 window.resetData = async function(nama){
 
     const yakin =
-    confirm(
-        "Reset pembayaran anggota ini?"
-    );
+    confirm("Reset pembayaran?");
 
     if(!yakin) return;
 
     const anggotaDoc =
     doc(
         db,
-        "kasbola",
-        tanggalAktif,
+        "kasbulanan",
+        bulanAktif,
         "anggota",
         nama
     );
@@ -673,9 +662,7 @@ window.resetData = async function(nama){
 window.hapusAnggota = async function(nama){
 
     const yakin =
-    confirm(
-        "Yakin ingin menghapus anggota?"
-    );
+    confirm("Hapus anggota?");
 
     if(!yakin) return;
 
@@ -686,8 +673,8 @@ window.hapusAnggota = async function(nama){
     await deleteDoc(
         doc(
             db,
-            "kasbola",
-            tanggalAktif,
+            "kasbulanan",
+            bulanAktif,
             "anggota",
             nama
         )
@@ -703,7 +690,7 @@ window.toggleMenu = function(nama){
         "menu-" + nama
     );
 
-    const isVisible =
+    const visible =
     menu.style.display == "block";
 
     document
@@ -713,7 +700,7 @@ window.toggleMenu = function(nama){
     });
 
     menu.style.display =
-    isVisible ? "none" : "block";
+    visible ? "none" : "block";
 }
 
 window.onclick = function(e){

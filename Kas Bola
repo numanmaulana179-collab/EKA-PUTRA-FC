@@ -1,1 +1,254 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kas Bola</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#f2f2f2;
+    padding:20px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+}
+
+input{
+    padding:10px;
+    width:70%;
+}
+
+button{
+    padding:10px;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.btnTambah{
+    background:green;
+    color:white;
+}
+
+.btnKas{
+    background:#2196f3;
+    color:white;
+}
+
+.btnMatch{
+    background:orange;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:center;
+}
+
+th{
+    background:#2196f3;
+    color:white;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Tambah Anggota</h2>
+
+<input type="text" id="nama" placeholder="Nama anggota">
+
+<button class="btnTambah" onclick="tambahAnggota()">
+Tambah
+</button>
+
+</div>
+
+<div class="card">
+
+<table>
+
+<thead>
+<tr>
+<th>Nama</th>
+<th>Kas</th>
+<th>Per Match</th>
+<th>Aksi</th>
+</tr>
+</thead>
+
+<tbody id="tbody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getDatabase,
+ref,
+push,
+onValue,
+update
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+
+  apiKey: "PASTE_APIKEY",
+  authDomain: "PASTE_AUTHDOMAIN",
+  databaseURL: "PASTE_DATABASEURL",
+  projectId: "PASTE_PROJECTID",
+  storageBucket: "PASTE_STORAGE",
+  messagingSenderId: "PASTE_SENDERID",
+  appId: "PASTE_APPID"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getDatabase(app);
+
+const anggotaRef = ref(db, "kasbola/anggota");
+
+window.tambahAnggota = function(){
+
+    const nama = document.getElementById("nama").value;
+
+    if(nama == ""){
+        alert("Nama kosong");
+        return;
+    }
+
+    push(anggotaRef,{
+        nama:nama,
+        kas:0,
+        match:0
+    });
+
+    document.getElementById("nama").value = "";
+}
+
+onValue(anggotaRef,(snapshot)=>{
+
+    const data = snapshot.val();
+
+    const tbody = document.getElementById("tbody");
+
+    tbody.innerHTML = "";
+
+    for(let id in data){
+
+        let item = data[id];
+
+        tbody.innerHTML += `
+        <tr>
+
+        <td>${item.nama}</td>
+
+        <td>
+        Rp ${item.kas || 0}
+        </td>
+
+        <td>
+        Rp ${item.match || 0}
+        </td>
+
+        <td>
+
+        <button class="btnKas"
+        onclick="bayarKas('${id}')">
+        Bayar Kas
+        </button>
+
+        <button class="btnMatch"
+        onclick="bayarMatch('${id}')">
+        Bayar Match
+        </button>
+
+        </td>
+
+        </tr>
+        `;
+    }
+
+});
+
+window.bayarKas = function(id){
+
+    let nominal = prompt("Nominal kas","10000");
+
+    if(!nominal) return;
+
+    const itemRef = ref(db,'kasbola/anggota/'+id);
+
+    onValue(itemRef,(snap)=>{
+
+        let data = snap.val();
+
+        let total = (data.kas || 0) + parseInt(nominal);
+
+        update(itemRef,{
+            kas:total
+        });
+
+    },{onlyOnce:true});
+
+}
+
+window.bayarMatch = function(id){
+
+    let nominal = prompt("Nominal match","5000");
+
+    if(!nominal) return;
+
+    const itemRef = ref(db,'kasbola/anggota/'+id);
+
+    onValue(itemRef,(snap)=>{
+
+        let data = snap.val();
+
+        let total = (data.match || 0) + parseInt(nominal);
+
+        update(itemRef,{
+            match:total
+        });
+
+    },{onlyOnce:true});
+
+}
+
+</script>
+
+</body>
+</html>
+
 

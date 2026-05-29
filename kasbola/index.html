@@ -1,11 +1,10 @@
-```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Kas Bola</title>
+<title>Kas Bola Harian</title>
 
 <style>
 
@@ -13,7 +12,7 @@
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Arial;
+    font-family:Arial,sans-serif;
 }
 
 body{
@@ -22,8 +21,13 @@ body{
 }
 
 .container{
-    max-width:1000px;
+    max-width:1200px;
     margin:auto;
+}
+
+.title{
+    margin-bottom:20px;
+    color:#222;
 }
 
 .card{
@@ -34,19 +38,20 @@ body{
     box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
-h1{
-    margin-bottom:20px;
+.top{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
 }
 
 input{
     padding:12px;
-    width:70%;
     border:1px solid #ccc;
     border-radius:8px;
 }
 
 button{
-    padding:12px 15px;
+    padding:12px 16px;
     border:none;
     border-radius:8px;
     cursor:pointer;
@@ -68,9 +73,15 @@ button{
     color:black;
 }
 
+.btnLoad{
+    background:#444;
+    color:white;
+}
+
 table{
     width:100%;
     border-collapse:collapse;
+    margin-top:20px;
 }
 
 th{
@@ -84,10 +95,50 @@ th,td{
     text-align:center;
 }
 
-.total{
+.totalBox{
+    display:flex;
+    gap:20px;
     margin-top:20px;
-    font-size:20px;
+    flex-wrap:wrap;
+}
+
+.totalCard{
+    flex:1;
+    min-width:200px;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.totalCard h3{
+    margin-bottom:10px;
+}
+
+.totalCard p{
+    font-size:24px;
     font-weight:bold;
+    color:#2196f3;
+}
+
+@media(max-width:700px){
+
+    .top{
+        flex-direction:column;
+    }
+
+    input{
+        width:100%;
+    }
+
+    table{
+        font-size:12px;
+    }
+
+    button{
+        width:100%;
+        margin-top:5px;
+    }
 }
 
 </style>
@@ -97,9 +148,32 @@ th,td{
 
 <div class="container">
 
-<h1>Kas & Iuran Match</h1>
+<h1 class="title">
+Kas & Iuran Match Harian
+</h1>
 
 <div class="card">
+
+<div class="top">
+
+<input type="date" id="tanggal">
+
+<button class="btnLoad"
+onclick="loadData()">
+Load Tanggal
+</button>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Tambah Anggota</h3>
+
+<br>
+
+<div class="top">
 
 <input type="text"
 id="nama"
@@ -112,26 +186,41 @@ Tambah
 
 </div>
 
+</div>
+
 <div class="card">
 
 <table>
 
 <thead>
+
 <tr>
 <th>Nama</th>
 <th>Kas</th>
-<th>Per Match</th>
+<th>Match</th>
 <th>Aksi</th>
 </tr>
+
 </thead>
 
-<tbody id="tbody"></tbody>
+<tbody id="tbody">
+
+</tbody>
 
 </table>
 
-<div class="total">
-Total Kas :
-Rp <span id="totalKas">0</span>
+<div class="totalBox">
+
+<div class="totalCard">
+<h3>Total Kas</h3>
+<p id="totalKas">Rp 0</p>
+</div>
+
+<div class="totalCard">
+<h3>Total Match</h3>
+<p id="totalMatch">Rp 0</p>
+</div>
+
 </div>
 
 </div>
@@ -146,11 +235,12 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore,
 collection,
-addDoc,
-onSnapshot,
 doc,
+setDoc,
+getDocs,
 updateDoc,
-increment
+increment,
+getDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -169,39 +259,84 @@ const app = initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 
-const anggotaRef = collection(db,"kasbola");
+let tanggalAktif = "";
+
+document.getElementById("tanggal").valueAsDate = new Date();
+
+window.loadData = async function(){
+
+    tanggalAktif =
+    document.getElementById("tanggal").value;
+
+    if(tanggalAktif == ""){
+        alert("Pilih tanggal");
+        return;
+    }
+
+    renderTable();
+}
 
 window.tambahAnggota = async function(){
 
-    const nama = document.getElementById("nama").value;
+    if(tanggalAktif == ""){
+        alert("Load tanggal dulu");
+        return;
+    }
+
+    const nama =
+    document.getElementById("nama").value;
 
     if(nama == ""){
         alert("Nama kosong");
         return;
     }
 
-    await addDoc(anggotaRef,{
+    const anggotaDoc = doc(
+        db,
+        "kasbola",
+        tanggalAktif,
+        "anggota",
+        nama
+    );
+
+    await setDoc(anggotaDoc,{
         nama:nama,
         kas:0,
         match:0
     });
 
     document.getElementById("nama").value = "";
+
+    renderTable();
 }
 
-onSnapshot(anggotaRef,(snapshot)=>{
+async function renderTable(){
 
-    const tbody = document.getElementById("tbody");
+    const tbody =
+    document.getElementById("tbody");
 
     tbody.innerHTML = "";
 
     let totalKas = 0;
+    let totalMatch = 0;
+
+    const anggotaRef =
+    collection(
+        db,
+        "kasbola",
+        tanggalAktif,
+        "anggota"
+    );
+
+    const snapshot =
+    await getDocs(anggotaRef);
 
     snapshot.forEach((docSnap)=>{
 
         const data = docSnap.data();
 
         totalKas += data.kas || 0;
+        totalMatch += data.match || 0;
 
         tbody.innerHTML += `
         <tr>
@@ -209,22 +344,24 @@ onSnapshot(anggotaRef,(snapshot)=>{
         <td>${data.nama}</td>
 
         <td>
-        Rp ${data.kas || 0}
+        Rp ${(data.kas || 0).toLocaleString()}
         </td>
 
         <td>
-        Rp ${data.match || 0}
+        Rp ${(data.match || 0).toLocaleString()}
         </td>
 
         <td>
 
-        <button class="btnKas"
-        onclick="bayarKas('${docSnap.id}')">
+        <button
+        class="btnKas"
+        onclick="bayarKas('${data.nama}')">
         Bayar Kas
         </button>
 
-        <button class="btnMatch"
-        onclick="bayarMatch('${docSnap.id}')">
+        <button
+        class="btnMatch"
+        onclick="bayarMatch('${data.nama}')">
         Bayar Match
         </button>
 
@@ -235,43 +372,63 @@ onSnapshot(anggotaRef,(snapshot)=>{
     });
 
     document.getElementById("totalKas").innerText =
-    totalKas.toLocaleString();
+    "Rp " + totalKas.toLocaleString();
 
-});
+    document.getElementById("totalMatch").innerText =
+    "Rp " + totalMatch.toLocaleString();
+}
 
-window.bayarKas = async function(id){
+window.bayarKas = async function(nama){
 
-    let nominal = prompt(
+    let nominal =
+    prompt(
         "Masukkan nominal kas",
         "10000"
     );
 
     if(!nominal) return;
 
-    const refDoc = doc(db,"kasbola",id);
+    const anggotaDoc = doc(
+        db,
+        "kasbola",
+        tanggalAktif,
+        "anggota",
+        nama
+    );
 
-    await updateDoc(refDoc,{
+    await updateDoc(anggotaDoc,{
         kas: increment(parseInt(nominal))
     });
 
+    renderTable();
 }
 
-window.bayarMatch = async function(id){
+window.bayarMatch = async function(nama){
 
-    let nominal = prompt(
+    let nominal =
+    prompt(
         "Masukkan nominal match",
         "5000"
     );
 
     if(!nominal) return;
 
-    const refDoc = doc(db,"kasbola",id);
+    const anggotaDoc = doc(
+        db,
+        "kasbola",
+        tanggalAktif,
+        "anggota",
+        nama
+    );
 
-    await updateDoc(refDoc,{
+    await updateDoc(anggotaDoc,{
         match: increment(parseInt(nominal))
     });
 
+    renderTable();
 }
+
+loadData();
 
 </script>
 

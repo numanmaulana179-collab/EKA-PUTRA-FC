@@ -1,0 +1,280 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Kas Bola</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial;
+}
+
+body{
+    background:#f2f2f2;
+    padding:20px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+input{
+    padding:12px;
+    width:70%;
+    border:1px solid #ccc;
+    border-radius:8px;
+}
+
+button{
+    padding:12px 15px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.btnTambah{
+    background:green;
+    color:white;
+}
+
+.btnKas{
+    background:#2196f3;
+    color:white;
+}
+
+.btnMatch{
+    background:orange;
+    color:black;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    background:#2196f3;
+    color:white;
+}
+
+th,td{
+    padding:12px;
+    border:1px solid #ddd;
+    text-align:center;
+}
+
+.total{
+    margin-top:20px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Kas & Iuran Match</h1>
+
+<div class="card">
+
+<input type="text"
+id="nama"
+placeholder="Masukkan nama anggota">
+
+<button class="btnTambah"
+onclick="tambahAnggota()">
+Tambah
+</button>
+
+</div>
+
+<div class="card">
+
+<table>
+
+<thead>
+<tr>
+<th>Nama</th>
+<th>Kas</th>
+<th>Per Match</th>
+<th>Aksi</th>
+</tr>
+</thead>
+
+<tbody id="tbody"></tbody>
+
+</table>
+
+<div class="total">
+Total Kas :
+Rp <span id="totalKas">0</span>
+</div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+onSnapshot,
+doc,
+updateDoc,
+increment
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
+  authDomain: "ekaputrafc-68823.firebaseapp.com",
+  databaseURL: "https://ekaputrafc-68823-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ekaputrafc-68823",
+  storageBucket: "ekaputrafc-68823.firebasestorage.app",
+  messagingSenderId: "582282824017",
+  appId: "1:582282824017:web:125b431feca5e85a1e6b70",
+  measurementId: "G-Q1WJQJRLQR"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+const anggotaRef = collection(db,"kasbola");
+
+window.tambahAnggota = async function(){
+
+    const nama = document.getElementById("nama").value;
+
+    if(nama == ""){
+        alert("Nama kosong");
+        return;
+    }
+
+    await addDoc(anggotaRef,{
+        nama:nama,
+        kas:0,
+        match:0
+    });
+
+    document.getElementById("nama").value = "";
+}
+
+onSnapshot(anggotaRef,(snapshot)=>{
+
+    const tbody = document.getElementById("tbody");
+
+    tbody.innerHTML = "";
+
+    let totalKas = 0;
+
+    snapshot.forEach((docSnap)=>{
+
+        const data = docSnap.data();
+
+        totalKas += data.kas || 0;
+
+        tbody.innerHTML += `
+        <tr>
+
+        <td>${data.nama}</td>
+
+        <td>
+        Rp ${data.kas || 0}
+        </td>
+
+        <td>
+        Rp ${data.match || 0}
+        </td>
+
+        <td>
+
+        <button class="btnKas"
+        onclick="bayarKas('${docSnap.id}')">
+        Bayar Kas
+        </button>
+
+        <button class="btnMatch"
+        onclick="bayarMatch('${docSnap.id}')">
+        Bayar Match
+        </button>
+
+        </td>
+
+        </tr>
+        `;
+    });
+
+    document.getElementById("totalKas").innerText =
+    totalKas.toLocaleString();
+
+});
+
+window.bayarKas = async function(id){
+
+    let nominal = prompt(
+        "Masukkan nominal kas",
+        "10000"
+    );
+
+    if(!nominal) return;
+
+    const refDoc = doc(db,"kasbola",id);
+
+    await updateDoc(refDoc,{
+        kas: increment(parseInt(nominal))
+    });
+
+}
+
+window.bayarMatch = async function(id){
+
+    let nominal = prompt(
+        "Masukkan nominal match",
+        "5000"
+    );
+
+    if(!nominal) return;
+
+    const refDoc = doc(db,"kasbola",id);
+
+    await updateDoc(refDoc,{
+        match: increment(parseInt(nominal))
+    });
+
+}
+
+</script>
+
+</body>
+</html>
+```

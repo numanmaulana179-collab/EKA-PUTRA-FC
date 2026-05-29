@@ -25,9 +25,8 @@ body{
     margin:auto;
 }
 
-.title{
+h1{
     margin-bottom:20px;
-    color:#222;
 }
 
 .card{
@@ -90,8 +89,8 @@ th{
 }
 
 th,td{
-    padding:12px;
     border:1px solid #ddd;
+    padding:12px;
     text-align:center;
 }
 
@@ -111,13 +110,10 @@ th,td{
     box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
-.totalCard h3{
-    margin-bottom:10px;
-}
-
 .totalCard p{
     font-size:24px;
     font-weight:bold;
+    margin-top:10px;
     color:#2196f3;
 }
 
@@ -148,9 +144,7 @@ th,td{
 
 <div class="container">
 
-<h1 class="title">
-Kas & Iuran Match Harian
-</h1>
+<h1>Kas & Iuran Match Harian</h1>
 
 <div class="card">
 
@@ -181,7 +175,7 @@ placeholder="Masukkan nama anggota">
 
 <button class="btnTambah"
 onclick="tambahAnggota()">
-Tambah
+Tambah Anggota
 </button>
 
 </div>
@@ -238,9 +232,9 @@ collection,
 doc,
 setDoc,
 getDocs,
+getDoc,
 updateDoc,
-increment,
-getDoc
+increment
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -261,7 +255,34 @@ const db = getFirestore(app);
 
 let tanggalAktif = "";
 
-document.getElementById("tanggal").valueAsDate = new Date();
+document.getElementById("tanggal").valueAsDate =
+new Date();
+
+window.tambahAnggota = async function(){
+
+    const nama =
+    document.getElementById("nama").value;
+
+    if(nama == ""){
+        alert("Nama kosong");
+        return;
+    }
+
+    const anggotaMaster =
+    doc(db,"anggota",nama);
+
+    await setDoc(anggotaMaster,{
+        nama:nama
+    });
+
+    document.getElementById("nama").value = "";
+
+    alert("Anggota berhasil ditambahkan");
+
+    if(tanggalAktif != ""){
+        loadData();
+    }
+}
 
 window.loadData = async function(){
 
@@ -273,39 +294,39 @@ window.loadData = async function(){
         return;
     }
 
-    renderTable();
-}
+    const anggotaCollection =
+    collection(db,"anggota");
 
-window.tambahAnggota = async function(){
+    const anggotaSnapshot =
+    await getDocs(anggotaCollection);
 
-    if(tanggalAktif == ""){
-        alert("Load tanggal dulu");
-        return;
+    for(const anggotaDoc of anggotaSnapshot.docs){
+
+        const nama =
+        anggotaDoc.data().nama;
+
+        const dataHarianRef =
+        doc(
+            db,
+            "kasbola",
+            tanggalAktif,
+            "anggota",
+            nama
+        );
+
+        const cek =
+        await getDoc(dataHarianRef);
+
+        if(!cek.exists()){
+
+            await setDoc(dataHarianRef,{
+                nama:nama,
+                kas:0,
+                match:0
+            });
+
+        }
     }
-
-    const nama =
-    document.getElementById("nama").value;
-
-    if(nama == ""){
-        alert("Nama kosong");
-        return;
-    }
-
-    const anggotaDoc = doc(
-        db,
-        "kasbola",
-        tanggalAktif,
-        "anggota",
-        nama
-    );
-
-    await setDoc(anggotaDoc,{
-        nama:nama,
-        kas:0,
-        match:0
-    });
-
-    document.getElementById("nama").value = "";
 
     renderTable();
 }
@@ -388,7 +409,8 @@ window.bayarKas = async function(nama){
 
     if(!nominal) return;
 
-    const anggotaDoc = doc(
+    const anggotaDoc =
+    doc(
         db,
         "kasbola",
         tanggalAktif,
@@ -413,7 +435,8 @@ window.bayarMatch = async function(nama){
 
     if(!nominal) return;
 
-    const anggotaDoc = doc(
+    const anggotaDoc =
+    doc(
         db,
         "kasbola",
         tanggalAktif,
@@ -434,4 +457,4 @@ loadData();
 
 </body>
 </html>
-```
+

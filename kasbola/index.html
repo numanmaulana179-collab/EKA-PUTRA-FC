@@ -169,6 +169,18 @@ th,td{
     background:#f2f2f2;
 }
 
+.statusBelum{
+    background:#ffb3b3 !important;
+}
+
+.statusCicil{
+    background:#fff0a6 !important;
+}
+
+.statusLunas{
+    background:#b8ffb8 !important;
+}
+
 @media(max-width:700px){
 
     .top{
@@ -317,16 +329,16 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCcdLLQ2u1ggm58Se30DSqXqUhfYR1ZnjE",
   authDomain: "ekaputrafc-68823.firebaseapp.com",
-  databaseURL: "https://ekaputrafc-68823-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "ekaputrafc-68823",
   storageBucket: "ekaputrafc-68823.firebasestorage.app",
   messagingSenderId: "582282824017",
-  appId: "1:582282824017:web:125b431feca5e85a1e6b70",
-  measurementId: "G-Q1WJQJRLQR"
+  appId: "1:582282824017:web:125b431feca5e85a1e6b70"
 };
 
-const app = initializeApp(firebaseConfig);
+const TARGET_KAS = 10000;
+const TARGET_MATCH = 5000;
 
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let tanggalAktif = "";
@@ -356,7 +368,6 @@ window.tambahAnggota = async function(){
     if(cekNama.exists()){
 
         alert("Nama sudah ada");
-
         return;
     }
 
@@ -439,6 +450,19 @@ window.loadData = async function(){
     renderTable();
 }
 
+function getStatusClass(value,target){
+
+    if(value <= 0){
+        return "statusBelum";
+    }
+
+    if(value < target){
+        return "statusCicil";
+    }
+
+    return "statusLunas";
+}
+
 async function renderTable(){
 
     const tbody =
@@ -450,8 +474,6 @@ async function renderTable(){
     let totalMatch = 0;
     let nomor = 1;
     let totalAnggota = 0;
-
-    const keyword = keywordCari;
 
     const anggotaRef =
     collection(
@@ -471,7 +493,7 @@ async function renderTable(){
         if(
             !data.nama
             .toLowerCase()
-            .includes(keyword)
+            .includes(keywordCari)
         ){
             return;
         }
@@ -481,6 +503,18 @@ async function renderTable(){
         totalKas += data.kas || 0;
         totalMatch += data.match || 0;
 
+        const kasClass =
+        getStatusClass(
+            data.kas || 0,
+            TARGET_KAS
+        );
+
+        const matchClass =
+        getStatusClass(
+            data.match || 0,
+            TARGET_MATCH
+        );
+
         tbody.innerHTML += `
         <tr>
 
@@ -488,11 +522,11 @@ async function renderTable(){
 
         <td>${data.nama}</td>
 
-        <td>
+        <td class="${kasClass}">
         Rp ${(data.kas || 0).toLocaleString()}
         </td>
 
-        <td>
+        <td class="${matchClass}">
         Rp ${(data.match || 0).toLocaleString()}
         </td>
 

@@ -47,6 +47,7 @@ input{
     padding:12px;
     border:1px solid #ccc;
     border-radius:8px;
+    flex:1;
 }
 
 button{
@@ -217,27 +218,33 @@ Load Tanggal
 
 <div class="card">
 
-<h3>Tambah Anggota</h3>
+<h3>Tambah / Cari Anggota</h3>
 
 <br>
 
-<input
-type="text"
-id="searchNama"
-placeholder="Cari anggota..."
-onkeyup="renderTable()">
-
-<br><br>
-
 <div class="top">
 
-<input type="text"
+<input
+type="text"
 id="nama"
-placeholder="Masukkan nama anggota">
+placeholder="Tambah / Cari anggota">
 
-<button class="btnTambah"
+<button
+class="btnTambah"
 onclick="tambahAnggota()">
 Tambah Anggota
+</button>
+
+<button
+class="btnLoad"
+onclick="cariAnggota()">
+Cari
+</button>
+
+<button
+class="btnLoad"
+onclick="resetCari()">
+Reset Cari
 </button>
 
 </div>
@@ -323,6 +330,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let tanggalAktif = "";
+let keywordCari = "";
 
 document.getElementById("tanggal").valueAsDate =
 new Date();
@@ -330,7 +338,9 @@ new Date();
 window.tambahAnggota = async function(){
 
     const nama =
-    document.getElementById("nama").value.trim();
+    document.getElementById("nama")
+    .value
+    .trim();
 
     if(nama == ""){
         alert("Nama kosong");
@@ -361,6 +371,25 @@ window.tambahAnggota = async function(){
     if(tanggalAktif != ""){
         loadData();
     }
+}
+
+window.cariAnggota = function(){
+
+    keywordCari =
+    document.getElementById("nama")
+    .value
+    .toLowerCase();
+
+    renderTable();
+}
+
+window.resetCari = function(){
+
+    keywordCari = "";
+
+    document.getElementById("nama").value = "";
+
+    renderTable();
 }
 
 window.loadData = async function(){
@@ -422,10 +451,7 @@ async function renderTable(){
     let nomor = 1;
     let totalAnggota = 0;
 
-    const keyword =
-    document.getElementById("searchNama")
-    ?.value
-    ?.toLowerCase() || "";
+    const keyword = keywordCari;
 
     const anggotaRef =
     collection(
@@ -537,7 +563,7 @@ window.bayarKas = async function(nama){
     let nominal =
     prompt(
         "Masukkan nominal kas",
-        "10.000"
+        "10000"
     );
 
     if(!nominal) return;
@@ -675,4 +701,4 @@ loadData();
 
 </body>
 </html>
-```
+

@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -134,6 +135,40 @@ th,td{
     justify-content:center;
 }
 
+.menuContainer{
+    position:relative;
+}
+
+.menuButton{
+    background:#555;
+    color:white;
+    width:40px;
+}
+
+.dropdownMenu{
+    display:none;
+    position:absolute;
+    right:0;
+    top:45px;
+    background:white;
+    min-width:120px;
+    border-radius:8px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.2);
+    overflow:hidden;
+    z-index:999;
+}
+
+.dropdownMenu button{
+    width:100%;
+    border-radius:0;
+    text-align:left;
+    padding:12px;
+}
+
+.dropdownMenu button:hover{
+    background:#f2f2f2;
+}
+
 @media(max-width:700px){
 
     .top{
@@ -187,6 +222,14 @@ Load Tanggal
 
 <br>
 
+<input
+type="text"
+id="searchNama"
+placeholder="Cari anggota..."
+onkeyup="renderTable()">
+
+<br><br>
+
 <div class="top">
 
 <input type="text"
@@ -209,6 +252,7 @@ Tambah Anggota
 <thead>
 
 <tr>
+<th>No</th>
 <th>Nama</th>
 <th>Kas</th>
 <th>Match</th>
@@ -224,6 +268,11 @@ Tambah Anggota
 </table>
 
 <div class="totalBox">
+
+<div class="totalCard">
+<h3>Total Anggota</h3>
+<p id="totalAnggota">0</p>
+</div>
 
 <div class="totalCard">
 <h3>Total Kas</h3>
@@ -371,6 +420,13 @@ async function renderTable(){
 
     let totalKas = 0;
     let totalMatch = 0;
+    let nomor = 1;
+    let totalAnggota = 0;
+
+    const keyword =
+    document.getElementById("searchNama")
+    ?.value
+    ?.toLowerCase() || "";
 
     const anggotaRef =
     collection(
@@ -387,11 +443,23 @@ async function renderTable(){
 
         const data = docSnap.data();
 
+        if(
+            !data.nama
+            .toLowerCase()
+            .includes(keyword)
+        ){
+            return;
+        }
+
+        totalAnggota++;
+
         totalKas += data.kas || 0;
         totalMatch += data.match || 0;
 
         tbody.innerHTML += `
         <tr>
+
+        <td>${nomor++}</td>
 
         <td>${data.nama}</td>
 
@@ -419,6 +487,18 @@ async function renderTable(){
         Match
         </button>
 
+        <div class="menuContainer">
+
+        <button
+        class="menuButton"
+        onclick="toggleMenu('${data.nama}')">
+        ⋮
+        </button>
+
+        <div
+        class="dropdownMenu"
+        id="menu-${data.nama}">
+
         <button
         class="btnReset"
         onclick="resetData('${data.nama}')">
@@ -433,6 +513,10 @@ async function renderTable(){
 
         </div>
 
+        </div>
+
+        </div>
+
         </td>
 
         </tr>
@@ -444,6 +528,9 @@ async function renderTable(){
 
     document.getElementById("totalMatch").innerText =
     "Rp " + totalMatch.toLocaleString();
+
+    document.getElementById("totalAnggota").innerText =
+    totalAnggota;
 }
 
 window.bayarKas = async function(nama){
@@ -548,6 +635,39 @@ window.hapusAnggota = async function(nama){
     );
 
     renderTable();
+}
+
+window.toggleMenu = function(nama){
+
+    const menu =
+    document.getElementById(
+        "menu-" + nama
+    );
+
+    const isVisible =
+    menu.style.display == "block";
+
+    document
+    .querySelectorAll(".dropdownMenu")
+    .forEach((m)=>{
+        m.style.display = "none";
+    });
+
+    menu.style.display =
+    isVisible ? "none" : "block";
+}
+
+window.onclick = function(e){
+
+    if(!e.target.matches(".menuButton")){
+
+        document
+        .querySelectorAll(".dropdownMenu")
+        .forEach((m)=>{
+            m.style.display = "none";
+        });
+
+    }
 }
 
 loadData();

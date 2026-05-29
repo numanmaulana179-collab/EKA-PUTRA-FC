@@ -50,7 +50,7 @@ input{
 }
 
 button{
-    padding:12px 16px;
+    padding:10px 14px;
     border:none;
     border-radius:8px;
     cursor:pointer;
@@ -74,6 +74,16 @@ button{
 
 .btnLoad{
     background:#444;
+    color:white;
+}
+
+.btnReset{
+    background:red;
+    color:white;
+}
+
+.btnHapus{
+    background:black;
     color:white;
 }
 
@@ -117,6 +127,13 @@ th,td{
     color:#2196f3;
 }
 
+.actionButtons{
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
 @media(max-width:700px){
 
     .top{
@@ -131,9 +148,12 @@ th,td{
         font-size:12px;
     }
 
+    .actionButtons{
+        flex-direction:column;
+    }
+
     button{
         width:100%;
-        margin-top:5px;
     }
 }
 
@@ -234,7 +254,8 @@ setDoc,
 getDocs,
 getDoc,
 updateDoc,
-increment
+increment,
+deleteDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -261,7 +282,7 @@ new Date();
 window.tambahAnggota = async function(){
 
     const nama =
-    document.getElementById("nama").value;
+    document.getElementById("nama").value.trim();
 
     if(nama == ""){
         alert("Nama kosong");
@@ -270,6 +291,16 @@ window.tambahAnggota = async function(){
 
     const anggotaMaster =
     doc(db,"anggota",nama);
+
+    const cekNama =
+    await getDoc(anggotaMaster);
+
+    if(cekNama.exists()){
+
+        alert("Nama sudah ada");
+
+        return;
+    }
 
     await setDoc(anggotaMaster,{
         nama:nama
@@ -374,17 +405,33 @@ async function renderTable(){
 
         <td>
 
+        <div class="actionButtons">
+
         <button
         class="btnKas"
         onclick="bayarKas('${data.nama}')">
-        Bayar Kas
+        Kas
         </button>
 
         <button
         class="btnMatch"
         onclick="bayarMatch('${data.nama}')">
-        Bayar Match
+        Match
         </button>
+
+        <button
+        class="btnReset"
+        onclick="resetData('${data.nama}')">
+        Reset
+        </button>
+
+        <button
+        class="btnHapus"
+        onclick="hapusAnggota('${data.nama}')">
+        Hapus
+        </button>
+
+        </div>
 
         </td>
 
@@ -451,10 +498,62 @@ window.bayarMatch = async function(nama){
     renderTable();
 }
 
+window.resetData = async function(nama){
+
+    const yakin =
+    confirm(
+        "Reset pembayaran anggota ini?"
+    );
+
+    if(!yakin) return;
+
+    const anggotaDoc =
+    doc(
+        db,
+        "kasbola",
+        tanggalAktif,
+        "anggota",
+        nama
+    );
+
+    await updateDoc(anggotaDoc,{
+        kas:0,
+        match:0
+    });
+
+    renderTable();
+}
+
+window.hapusAnggota = async function(nama){
+
+    const yakin =
+    confirm(
+        "Yakin ingin menghapus anggota?"
+    );
+
+    if(!yakin) return;
+
+    await deleteDoc(
+        doc(db,"anggota",nama)
+    );
+
+    await deleteDoc(
+        doc(
+            db,
+            "kasbola",
+            tanggalAktif,
+            "anggota",
+            nama
+        )
+    );
+
+    renderTable();
+}
+
 loadData();
 
 </script>
 
 </body>
 </html>
-
+```

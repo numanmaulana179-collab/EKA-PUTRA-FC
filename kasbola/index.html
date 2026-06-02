@@ -391,6 +391,7 @@ window.tambahAnggota = async function(){
     loadData();
 }
 
+
 window.loadData = async function(){
 
     tanggalAktif =
@@ -412,54 +413,38 @@ window.loadData = async function(){
 
     for(const anggotaDoc of anggotaSnapshot.docs){
 
-        const nama =
-        anggotaDoc.data().nama;
+        const nama = anggotaDoc.data().nama;
 
-        const kasRef =
-        doc(
-            db,
-            "kasbulanan",
-            bulanAktif,
-            "anggota",
-            nama
+        const kasRef = doc(
+            db,"kasbulanan",bulanAktif,"anggota",nama
         );
 
-        const cekKas =
-        await getDoc(kasRef);
+        const cekKas = await getDoc(kasRef);
 
         if(!cekKas.exists()){
-
             await setDoc(kasRef,{
                 nama:nama,
                 kas:0
             });
+        }
 
-            const matchRef =
-            doc(
-                db,
-                "matchharian",
-                tanggalAktif,
-                "anggota",
-                nama
-            );
+        const matchRef = doc(
+            db,"matchharian",tanggalAktif,"anggota",nama
+        );
 
-            const cekMatch =
-            await getDoc(matchRef);
+        const cekMatch = await getDoc(matchRef);
 
-            if(!cekMatch.exists()){
-
-                await setDoc(matchRef,{
-                    nama:nama,
-                    match:0
-                });
-
-            }
-
+        if(!cekMatch.exists()){
+            await setDoc(matchRef,{
+                nama:nama,
+                match:0
+            });
         }
     }
 
     renderTable();
 }
+
 
 function getStatusClass(value,target){
 
@@ -474,11 +459,10 @@ function getStatusClass(value,target){
     return "statusLunas";
 }
 
+
 async function renderTable(){
 
-    const tbody =
-    document.getElementById("tbody");
-
+    const tbody = document.getElementById("tbody");
     tbody.innerHTML = "";
 
     let nomor = 1;
@@ -486,112 +470,63 @@ async function renderTable(){
     let totalMatch = 0;
     let totalAnggota = 0;
 
-    const anggotaRef =
-    collection(
-        db,
-        "kasbulanan",
-        bulanAktif,
-        "anggota"
+    const anggotaRef = collection(
+        db,"kasbulanan",bulanAktif,"anggota"
     );
 
-    const snapshot =
-    await getDocs(anggotaRef);
+    const snapshot = await getDocs(anggotaRef);
 
-    snapshot.forEach((docSnap)=>{
+    for(const docSnap of snapshot.docs){
 
         const data = docSnap.data();
 
-        if(
-            !data.nama
-            .toLowerCase()
-            .includes(keywordCari)
-        ){
-            return;
+        if(!data.nama.toLowerCase().includes(keywordCari)){
+            continue;
+        }
+
+        const matchSnap = await getDoc(
+            doc(db,"matchharian",tanggalAktif,"anggota",data.nama)
+        );
+
+        let matchValue = 0;
+
+        if(matchSnap.exists()){
+            matchValue = matchSnap.data().match || 0;
         }
 
         totalAnggota++;
-
         totalKas += data.kas || 0;
-        totalMatch += data.match || 0;
+        totalMatch += matchValue;
 
-        const kasClass =
-        getStatusClass(
+        const kasClass = getStatusClass(
             data.kas || 0,
             TARGET_KAS
         );
 
-        const matchClass =
-        getStatusClass(
-            data.match || 0,
-            TARGET_MATCH
-        );
-
         tbody.innerHTML += `
         <tr>
-
         <td>${nomor++}</td>
-
         <td>${data.nama}</td>
 
         <td class="${kasClass}">
         Rp ${(data.kas || 0).toLocaleString()}
         </td>
 
-        <td class="${matchClass}">
-        Rp ${(data.match || 0).toLocaleString()}
+        <td>
+        Rp ${matchValue.toLocaleString()}
         </td>
 
         <td>
-
         <div class="actionButtons">
-
-        <button
-        class="btnKas"
-        onclick="bayarKas('${data.nama}')">
-        Kas
-        </button>
-
-        <button
-        class="btnMatch"
-        onclick="bayarMatch('${data.nama}')">
-        Match
-        </button>
-
+        <button class="btnKas" onclick="bayarKas('${data.nama}')">Kas</button>
+        <button class="btnMatch" onclick="bayarMatch('${data.nama}')">Match</button>
         <div class="menuContainer">
-
-        <button
-        class="menuButton"
-        onclick="toggleMenu('${data.nama}')">
-        ⋮
-        </button>
-
-        <div
-        class="dropdownMenu"
-        id="menu-${data.nama}">
-
-        <button
-        class="btnReset"
-        onclick="resetData('${data.nama}')">
-        Reset
-        </button>
-
-        <button
-        class="btnHapus"
-        onclick="hapusAnggota('${data.nama}')">
-        Hapus
-        </button>
-
-        </div>
-
-        </div>
-
-        </div>
-
-        </td>
-
-        </tr>
-        `;
-    });
+        <button class="menuButton" onclick="toggleMenu('${data.nama}')">⋮</button>
+        <div class="dropdownMenu" id="menu-${data.nama}">
+        <button class="btnReset" onclick="resetData('${data.nama}')">Reset</button>
+        <button class="btnHapus" onclick="hapusAnggota('${data.nama}')">Hapus</button>
+        </div></div></div></td></tr>`;
+    }
 
     document.getElementById("totalKas").innerText =
     "Rp " + totalKas.toLocaleString();
@@ -602,6 +537,7 @@ async function renderTable(){
     document.getElementById("totalAnggota").innerText =
     totalAnggota;
 }
+
 
 window.bayarKas = async function(nama){
 
@@ -629,32 +565,14 @@ window.bayarKas = async function(nama){
     renderTable();
 }
 
+
 window.bayarMatch = async function(nama){
 
-    let nominal =
-    prompt(
-        "Masukkan nominal match",
-        "5000"
-    );
-
+    let nominal = prompt("Masukkan nominal match","5000");
     if(!nominal) return;
 
-    const anggotaDoc =
-    doc(
-        db,
-        "kasbulanan",
-        bulanAktif,
-        "anggota",
-        nama
-    );
-
-    const matchDoc =
-    doc(
-        db,
-        "matchharian",
-        tanggalAktif,
-        "anggota",
-        nama
+    const matchDoc = doc(
+        db,"matchharian",tanggalAktif,"anggota",nama
     );
 
     await updateDoc(matchDoc,{
@@ -664,29 +582,28 @@ window.bayarMatch = async function(nama){
     renderTable();
 }
 
+
+
 window.resetData = async function(nama){
 
-    const yakin =
-    confirm("Reset pembayaran?");
-
+    const yakin = confirm("Reset pembayaran?");
     if(!yakin) return;
 
-    const anggotaDoc =
-    doc(
-        db,
-        "kasbulanan",
-        bulanAktif,
-        "anggota",
-        nama
+    const kasDoc = doc(
+        db,"kasbulanan",bulanAktif,"anggota",nama
     );
 
-    await updateDoc(anggotaDoc,{
-        kas:0,
-        match:0
-    });
+    await updateDoc(kasDoc,{ kas:0 });
+
+    const matchDoc = doc(
+        db,"matchharian",tanggalAktif,"anggota",nama
+    );
+
+    await updateDoc(matchDoc,{ match:0 });
 
     renderTable();
 }
+
 
 window.hapusAnggota = async function(nama){
 

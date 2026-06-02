@@ -431,9 +431,29 @@ window.loadData = async function(){
 
             await setDoc(kasRef,{
                 nama:nama,
-                kas:0,
-                match:0
+                kas:0
             });
+
+            const matchRef =
+            doc(
+                db,
+                "matchharian",
+                tanggalAktif,
+                "anggota",
+                nama
+            );
+
+            const cekMatch =
+            await getDoc(matchRef);
+
+            if(!cekMatch.exists()){
+
+                await setDoc(matchRef,{
+                    nama:nama,
+                    match:0
+                });
+
+            }
 
         }
     }
@@ -628,7 +648,16 @@ window.bayarMatch = async function(nama){
         nama
     );
 
-    await updateDoc(anggotaDoc,{
+    const matchDoc =
+    doc(
+        db,
+        "matchharian",
+        tanggalAktif,
+        "anggota",
+        nama
+    );
+
+    await updateDoc(matchDoc,{
         match: increment(parseInt(nominal))
     });
 

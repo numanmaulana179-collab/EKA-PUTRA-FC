@@ -305,7 +305,7 @@ Reset
 <th>Nama</th>
 <th>Kas Bulanan</th>
 <th>Iuran Match</th>
-<th>Aksi</th>
+<th>⋮</th>
 </tr>
 
 </thead>
@@ -566,15 +566,78 @@ Rp ${matchValue.toLocaleString()}
 </td>
 
         <td>
-        <div class="actionButtons">
-        <button class="btnKas" onclick="bayarKas('${data.nama}')">Kas</button>
-        <button class="btnMatch" onclick="bayarMatch('${data.nama}')">Match</button>
         <div class="menuContainer">
-        <button class="menuButton" onclick="toggleMenu('${data.nama}')">⋮</button>
-        <div class="dropdownMenu" id="menu-${data.nama}">
-        <button class="btnReset" onclick="resetData('${data.nama}')">Reset</button>
-        <button class="btnHapus" onclick="hapusAnggota('${data.nama}')">Hapus</button>
-        </div></div></div></td></tr>`;
+
+<button
+class="menuButton"
+onclick="toggleMenu('${data.nama}')">
+⋮
+</button>
+
+<div
+class="dropdownMenu"
+id="menu-${data.nama}">
+
+<button onclick="editNama('${data.nama}')">
+✏️ Ubah Nama
+</button>
+
+<button onclick="bayarKas('${data.nama}')">
+💰 Bayar Kas
+</button>
+
+<button onclick="bayarMatch('${data.nama}')">
+⚽ Bayar Match
+</button>
+
+<button onclick="resetData('${data.nama}')">
+🔄 Reset
+</button>
+
+<button onclick="hapusAnggota('${data.nama}')">
+🗑️ Hapus
+</button>
+window.editNama = async function(namaLama){
+
+    let namaBaru =
+    prompt(
+        "Masukkan nama baru",
+        namaLama
+    );
+
+    if(!namaBaru) return;
+
+    namaBaru = namaBaru.trim();
+
+    if(namaBaru == namaLama) return;
+
+    const cek =
+    await getDoc(
+        doc(db,"anggota",namaBaru)
+    );
+
+    if(cek.exists()){
+
+        alert("Nama sudah ada");
+        return;
+    }
+
+    await setDoc(
+        doc(db,"anggota",namaBaru),
+        {nama:namaBaru}
+    );
+
+    await deleteDoc(
+        doc(db,"anggota",namaLama)
+    );
+
+    alert("Nama berhasil diubah");
+
+    loadData();
+}
+</div>
+
+</div>`;
     }
 
     document.getElementById("totalKas").innerText =

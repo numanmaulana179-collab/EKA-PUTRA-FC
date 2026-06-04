@@ -51,11 +51,12 @@ input{
 }
 
 button{
-    padding:10px 14px;
+    padding:6px 10px;
     border:none;
-    border-radius:8px;
+    border-radius:6px;
     cursor:pointer;
     font-weight:bold;
+    font-size:13px;
 }
 
 .btnLoad{
@@ -108,11 +109,40 @@ th{
 
 th,td{
     border:1px solid #ddd;
-    padding:12px;
+    padding:8px 10px;
     text-align:center;
     white-space:nowrap;
 }
+/* No */
+th:nth-child(1),
+td:nth-child(1){
+    width:50px;
+}
 
+/* Nama */
+th:nth-child(2),
+td:nth-child(2){
+    width:180px;
+    text-align:left;
+}
+
+/* Kas Bulanan */
+th:nth-child(3),
+td:nth-child(3){
+    width:120px;
+}
+
+/* Iuran Match */
+th:nth-child(4),
+td:nth-child(4){
+    width:120px;
+}
+
+/* Aksi */
+th:nth-child(5),
+td:nth-child(5){
+    width:140px;
+}
 .totalBox{
     display:flex;
     gap:20px;
@@ -150,9 +180,10 @@ th,td{
 
 .actionButtons{
     display:flex;
-    gap:5px;
+    gap:4px;
     justify-content:center;
-    flex-wrap:wrap;
+    align-items:center;
+    flex-wrap:nowrap;
 }
 
 .menuContainer{
@@ -162,7 +193,9 @@ th,td{
 .menuButton{
     background:#555;
     color:white;
-    width:40px;
+    width:32px;
+    height:32px;
+    padding:0;
 }
 
 .dropdownMenu{

@@ -502,7 +502,13 @@ async function renderTable(){
             data.kas || 0,
             TARGET_KAS
         );
+let matchClass = "";
 
+if(matchValue > 0){
+    matchClass = "statusLunas";
+}else{
+    matchClass = "statusBelum";
+}
         tbody.innerHTML += `
         <tr>
         <td>${nomor++}</td>
@@ -512,9 +518,9 @@ async function renderTable(){
         Rp ${(data.kas || 0).toLocaleString()}
         </td>
 
-        <td>
-        Rp ${matchValue.toLocaleString()}
-        </td>
+        <td class="${matchClass}">
+Rp ${matchValue.toLocaleString()}
+</td>
 
         <td>
         <div class="actionButtons">

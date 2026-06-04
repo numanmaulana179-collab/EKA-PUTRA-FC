@@ -88,11 +88,18 @@ button{
     color:white;
 }
 
+.tableWrapper{
+    overflow-x:auto;
+    width:100%;
+}
+
 table{
     width:100%;
+    min-width:900px;
     border-collapse:collapse;
     margin-top:20px;
 }
+    
 
 th{
     background:#2196f3;
@@ -103,6 +110,7 @@ th,td{
     border:1px solid #ddd;
     padding:12px;
     text-align:center;
+    white-space:nowrap;
 }
 
 .totalBox{
@@ -254,6 +262,7 @@ Reset
 
 <div class="card">
 
+<div class="tableWrapper">
 <table>
 
 <thead>
@@ -273,6 +282,7 @@ Reset
 </tbody>
 
 </table>
+</div>
 
 <div class="totalBox">
 
